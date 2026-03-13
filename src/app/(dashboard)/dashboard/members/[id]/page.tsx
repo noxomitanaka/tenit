@@ -171,6 +171,28 @@ export default function MemberDetailPage() {
         </div>
       )}
 
+      {/* QRコード */}
+      {!editing && (
+        <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">出席用QRコード</h3>
+          <div className="flex items-start gap-4">
+            <img
+              src={`/api/members/${id}/qr`}
+              alt={`${member.name} QRコード`}
+              className="w-32 h-32 border border-gray-100 rounded-lg"
+            />
+            <div className="text-xs text-gray-500 space-y-1 pt-2">
+              <p>このQRコードをスキャンすると</p>
+              <p>出席が自動打刻されます</p>
+              <a href={`/api/members/${id}/qr`} download={`qr-${member.name}.png`}
+                className="mt-2 inline-block text-emerald-600 hover:underline">
+                ダウンロード
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!editing && (
         <div className="flex gap-3 mt-4">
           <button onClick={() => setEditing(true)}

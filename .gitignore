@@ -39,6 +39,13 @@ Thumbs.db
 # Drizzle migrations (コミット対象だが念のため)
 # migrations/ はコミット対象
 
+# Test coverage
+coverage/
+
+# Security
+*.pem
+*.key
+
 # Logs
 *.log
 npm-debug.log*

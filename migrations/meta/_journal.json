@@ -22,6 +22,13 @@
       "when": 1773393421909,
       "tag": "0002_quick_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773394526003,
+      "tag": "0003_superb_cerise",
+      "breakpoints": true
     }
   ]
 }

@@ -240,6 +240,39 @@ export const tournamentMatches = sqliteTable('tournament_match', {
     .default(sql`(strftime('%s', 'now') * 1000)`),
 });
 
+// ─── Attendance ───────────────────────────────────────────────────────────────
+
+export const attendances = sqliteTable(
+  'attendance',
+  {
+    id: text('id').notNull().primaryKey(),
+    lessonSlotId: text('lesson_slot_id').notNull().references(() => lessonSlots.id, { onDelete: 'cascade' }),
+    memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+    method: text('method', { enum: ['qr', 'manual'] }).notNull().default('manual'),
+    markedAt: integer('marked_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+    markedBy: text('marked_by').references(() => users.id, { onDelete: 'set null' }),
+  }
+);
+
+// ─── Broadcast messages ───────────────────────────────────────────────────────
+
+export const broadcastMessages = sqliteTable('broadcast_message', {
+  id: text('id').notNull().primaryKey(),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  channel: text('channel', { enum: ['email', 'line', 'both'] }).notNull().default('email'),
+  targetType: text('target_type', { enum: ['all', 'group', 'level'] }).notNull().default('all'),
+  targetId: text('target_id'),   // groupId or level value
+  sentCount: integer('sent_count').notNull().default(0),
+  sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+  createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type Member = typeof members.$inferSelect;
@@ -252,3 +285,5 @@ export type SubstitutionCredit = typeof substitutionCredits.$inferSelect;
 export type Tournament = typeof tournaments.$inferSelect;
 export type TournamentEntry = typeof tournamentEntries.$inferSelect;
 export type TournamentMatch = typeof tournamentMatches.$inferSelect;
+export type Attendance = typeof attendances.$inferSelect;
+export type BroadcastMessage = typeof broadcastMessages.$inferSelect;

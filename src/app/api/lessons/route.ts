@@ -13,9 +13,13 @@ export async function GET(req: Request) {
   const courtId = searchParams.get('courtId');
   const groupId = searchParams.get('groupId');
 
+  const isRecurring = searchParams.get('isRecurring');
+
   const conds = [];
   if (courtId) conds.push(eq(lessons.courtId, courtId));
   if (groupId) conds.push(eq(lessons.groupId, groupId));
+  if (isRecurring === 'true') conds.push(eq(lessons.isRecurring, true));
+  else if (isRecurring === 'false') conds.push(eq(lessons.isRecurring, false));
 
   const result = await db.select().from(lessons)
     .where(conds.length > 0 ? and(...conds) : undefined)
