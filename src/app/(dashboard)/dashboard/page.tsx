@@ -1,52 +1,87 @@
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
+import { db } from '@/db';
+import { members, reservations, lessonSlots, substitutionCredits } from '@/db/schema';
+import { eq, and, isNull, gte, sql } from 'drizzle-orm';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
 
-  if (!session?.user) {
-    redirect('/login');
-  }
+  const [memberRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(members)
+    .where(eq(members.status, 'active'));
+
+  const [todayRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(reservations)
+    .innerJoin(lessonSlots, eq(reservations.lessonSlotId, lessonSlots.id))
+    .where(and(eq(reservations.status, 'confirmed'), eq(lessonSlots.date, today)));
+
+  const [creditRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(substitutionCredits)
+    .where(and(isNull(substitutionCredits.usedAt), gte(substitutionCredits.expiresAt, now)));
+
+  const stats = [
+    { label: '今日の予約', value: Number(todayRow?.count ?? 0), unit: '件', color: 'blue' },
+    { label: 'アクティブ会員', value: Number(memberRow?.count ?? 0), unit: '名', color: 'emerald' },
+    { label: '振替残数（全体）', value: Number(creditRow?.count ?? 0), unit: '件', color: 'amber' },
+    { label: '今月の稼働率', value: '-', unit: '%', color: 'purple' },
+  ] as const;
+
+  const colorMap = {
+    blue: 'text-blue-600',
+    emerald: 'text-emerald-600',
+    amber: 'text-amber-600',
+    purple: 'text-purple-600',
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-emerald-700">🎾 Tenit</h1>
-          <div className="text-sm text-gray-500">
-            {session.user.name} ({session.user.role === 'admin' ? '管理者' : session.user.role === 'coach' ? 'コーチ' : '会員'})
+    <div className="p-8">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">ダッシュボード</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+            <p className="text-xs text-gray-500">{stat.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${colorMap[stat.color]}`}>
+              {stat.value}
+              <span className="text-sm font-normal text-gray-400 ml-1">{stat.unit}</span>
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-semibold text-gray-700 mb-4">クイックアクション</h3>
+          <div className="space-y-2">
+            <Link href="/dashboard/members/new"
+              className="block px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg text-sm hover:bg-emerald-100 transition-colors">
+              ＋ 会員を追加する
+            </Link>
+            <Link href="/dashboard/schedule"
+              className="block px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors">
+              📅 スケジュールを見る
+            </Link>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">ダッシュボード</h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: '今日の予約', value: '-', unit: '件' },
-            { label: 'アクティブ会員', value: '-', unit: '名' },
-            { label: '振替残数（全体）', value: '-', unit: '件' },
-            { label: '今月の稼働率', value: '-', unit: '%' },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl p-4 shadow-sm">
-              <p className="text-xs text-gray-500">{stat.label}</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">
-                {stat.value}
-                <span className="text-sm font-normal text-gray-400 ml-1">{stat.unit}</span>
-              </p>
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="font-semibold text-gray-700 mb-4">システム情報</h3>
+          <dl className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <dt className="text-gray-500">バージョン</dt>
+              <dd className="font-medium text-gray-700">Phase 1</dd>
             </div>
-          ))}
+            <div className="flex justify-between">
+              <dt className="text-gray-500">ライセンス</dt>
+              <dd className="font-medium text-gray-700">AGPL-3.0</dd>
+            </div>
+          </dl>
         </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm">
-          <p className="text-gray-500 text-sm text-center py-8">
-            Phase 1 実装中...
-            <br />
-            会員管理・コートスケジュール・振替レッスン機能を開発中です
-          </p>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

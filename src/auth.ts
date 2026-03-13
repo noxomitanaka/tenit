@@ -1,29 +1,13 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import { authConfig } from './auth.config';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-
-// パスワードのハッシュ化は本番では bcrypt 等を使う
-// Phase 0 では crypto.subtle (Web Crypto API) で簡易実装
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Buffer.from(hash).toString('hex');
-}
-
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const hashed = await hashPassword(password);
-  return hashed === hash;
-}
+import { verifyPassword } from '@/lib/password';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // Phase 0: JWT-only（@auth/drizzle-adapter は Phase 1 で追加）
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/login',
-  },
+  ...authConfig,
   providers: [
     Credentials({
       name: 'credentials',
@@ -56,20 +40,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = (user as { role?: string }).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token?.role) {
-        session.user.role = token.role as 'admin' | 'coach' | 'member';
-      }
-      return session;
-    },
-  },
 });
-
-export { hashPassword };

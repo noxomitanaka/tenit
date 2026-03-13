@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users, clubSettings } from '@/db/schema';
-import { hashPassword } from '@/auth';
+import { hashPassword } from '@/lib/password';
 import { count } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
