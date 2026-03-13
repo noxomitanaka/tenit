@@ -29,11 +29,23 @@ export async function PUT(req: Request) {
   if (body.substitutionDeadlineDays !== undefined) {
     updateData.substitutionDeadlineDays = Number(body.substitutionDeadlineDays);
   }
+  if (body.defaultMonthlyFee !== undefined) {
+    updateData.defaultMonthlyFee = Number(body.defaultMonthlyFee);
+  }
   if (body.lineChannelAccessToken !== undefined) {
     updateData.lineChannelAccessToken = body.lineChannelAccessToken || null;
   }
   if (body.lineChannelSecret !== undefined) {
     updateData.lineChannelSecret = body.lineChannelSecret || null;
+  }
+  if (body.stripePublishableKey !== undefined) {
+    updateData.stripePublishableKey = body.stripePublishableKey || null;
+  }
+  if (body.stripeSecretKey !== undefined) {
+    updateData.stripeSecretKey = body.stripeSecretKey || null;
+  }
+  if (body.stripeWebhookSecret !== undefined) {
+    updateData.stripeWebhookSecret = body.stripeWebhookSecret || null;
   }
 
   const [updated] = await db.update(clubSettings)

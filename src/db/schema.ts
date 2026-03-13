@@ -69,6 +69,10 @@ export const clubSettings = sqliteTable('club_settings', {
   lineChannelAccessToken: text('line_channel_access_token'),
   lineChannelSecret: text('line_channel_secret'),
   substitutionDeadlineDays: integer('substitution_deadline_days').notNull().default(31),
+  defaultMonthlyFee: integer('default_monthly_fee').notNull().default(0),
+  stripePublishableKey: text('stripe_publishable_key'),
+  stripeSecretKey: text('stripe_secret_key'),
+  stripeWebhookSecret: text('stripe_webhook_secret'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(strftime('%s', 'now') * 1000)`),
@@ -89,6 +93,8 @@ export const members = sqliteTable('member', {
   leftAt: integer('left_at', { mode: 'timestamp_ms' }),
   parentMemberId: text('parent_member_id'), // 家族アカウント: 保護者 → ジュニア
   lineUserId: text('line_user_id'),          // LINE通知用
+  stripeCustomerId: text('stripe_customer_id'), // Stripe顧客ID（自動作成）
+  monthlyFee: integer('monthly_fee'),           // 個別月謝（nullの場合クラブデフォルト適用）
   notes: text('notes'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
@@ -240,6 +246,23 @@ export const tournamentMatches = sqliteTable('tournament_match', {
     .default(sql`(strftime('%s', 'now') * 1000)`),
 });
 
+// ─── Monthly fees ─────────────────────────────────────────────────────────────
+
+export const monthlyFees = sqliteTable('monthly_fee', {
+  id: text('id').notNull().primaryKey(),
+  memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+  month: text('month').notNull(),         // YYYY-MM
+  amount: integer('amount').notNull(),    // 円
+  status: text('status', { enum: ['pending', 'paid', 'overdue', 'waived'] }).notNull().default('pending'),
+  paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
+  stripePaymentIntentId: text('stripe_payment_intent_id'),
+  stripeCheckoutSessionId: text('stripe_checkout_session_id'),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+});
+
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
 export const attendances = sqliteTable(
@@ -287,3 +310,4 @@ export type TournamentEntry = typeof tournamentEntries.$inferSelect;
 export type TournamentMatch = typeof tournamentMatches.$inferSelect;
 export type Attendance = typeof attendances.$inferSelect;
 export type BroadcastMessage = typeof broadcastMessages.$inferSelect;
+export type MonthlyFee = typeof monthlyFees.$inferSelect;

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/schedule', label: 'スケジュール', icon: '📅', exact: false },
   { href: '/dashboard/reservations', label: '予約一覧', icon: '📋', exact: false },
   { href: '/dashboard/tournaments', label: '大会管理', icon: '🏆', exact: false },
+  { href: '/dashboard/fees', label: '月謝管理', icon: '💴', exact: false },
   { href: '/dashboard/broadcast', label: '一斉配信', icon: '📣', exact: false },
   { href: '/dashboard/reports', label: 'レポート', icon: '📊', exact: false },
   { href: '/dashboard/settings', label: '設定', icon: '⚙️', exact: false },

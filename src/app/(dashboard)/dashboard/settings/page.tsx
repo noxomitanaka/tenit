@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 interface Settings {
   name: string;
   substitutionDeadlineDays: number;
+  defaultMonthlyFee: number;
   lineChannelAccessToken: string | null;
+  stripePublishableKey: string | null;
 }
 
 export default function SettingsPage() {
@@ -33,8 +35,12 @@ export default function SettingsPage() {
       body: JSON.stringify({
         name: get('name'),
         substitutionDeadlineDays: Number(get('substitutionDeadlineDays')),
+        defaultMonthlyFee: Number(get('defaultMonthlyFee')),
         lineChannelAccessToken: get('lineChannelAccessToken') || null,
         lineChannelSecret: get('lineChannelSecret') || null,
+        stripePublishableKey: get('stripePublishableKey') || null,
+        stripeSecretKey: get('stripeSecretKey') || null,
+        stripeWebhookSecret: get('stripeWebhookSecret') || null,
       }),
     });
 
@@ -78,6 +84,15 @@ export default function SettingsPage() {
               defaultValue={settings.substitutionDeadlineDays}
               className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              デフォルト月謝（円）
+              <span className="text-gray-400 font-normal ml-2">会員個別設定がない場合に適用</span>
+            </label>
+            <input name="defaultMonthlyFee" type="number" min="0"
+              defaultValue={settings.defaultMonthlyFee ?? 0}
+              className="w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
         </div>
 
         {/* LINE設定 */}
@@ -107,6 +122,39 @@ export default function SettingsPage() {
           <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
             <p className="font-medium text-gray-600 mb-1">Webhook URL（LINE 開発者コンソールに設定）</p>
             <p className="font-mono">{typeof window !== 'undefined' ? window.location.origin : ''}/api/line/webhook</p>
+          </div>
+        </div>
+
+        {/* Stripe設定 */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold text-gray-700">Stripe 決済</h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              月謝のオンライン決済に使用します。未設定の場合は現金払いのみになります。
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Publishable Key</label>
+            <input name="stripePublishableKey" type="text"
+              defaultValue={settings.stripePublishableKey ?? ''}
+              placeholder="pk_live_..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Secret Key</label>
+            <input name="stripeSecretKey" type="password"
+              placeholder="変更する場合のみ入力"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Secret</label>
+            <input name="stripeWebhookSecret" type="password"
+              placeholder="変更する場合のみ入力"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+            <p className="font-medium text-gray-600 mb-1">Webhook エンドポイント（Stripe ダッシュボードに設定）</p>
+            <p className="font-mono">{typeof window !== 'undefined' ? window.location.origin : ''}/api/stripe/webhook</p>
           </div>
         </div>
 

@@ -6,6 +6,7 @@ const TABS = [
   { href: '/portal', label: 'ホーム', exact: true },
   { href: '/portal/reservations', label: '予約履歴', exact: false },
   { href: '/portal/book', label: 'レッスン予約', exact: false },
+  { href: '/portal/fees', label: '月謝', exact: false },
 ];
 
 export function PortalNav() {
