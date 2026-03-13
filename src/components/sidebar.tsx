@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/members', label: '会員管理', icon: '👤', exact: false },
   { href: '/dashboard/schedule', label: 'スケジュール', icon: '📅', exact: false },
   { href: '/dashboard/reservations', label: '予約一覧', icon: '📋', exact: false },
+  { href: '/dashboard/tournaments', label: '大会管理', icon: '🏆', exact: false },
   { href: '/dashboard/settings', label: '設定', icon: '⚙️', exact: false },
 ];
 

@@ -190,6 +190,56 @@ export const substitutionCredits = sqliteTable('substitution_credit', {
     .default(sql`(strftime('%s', 'now') * 1000)`),
 });
 
+// ─── Tournaments ──────────────────────────────────────────────────────────────
+
+export const tournaments = sqliteTable('tournament', {
+  id: text('id').notNull().primaryKey(),
+  name: text('name').notNull(),
+  type: text('type', { enum: ['swiss', 'elimination', 'round_robin'] }).notNull().default('swiss'),
+  status: text('status', { enum: ['draft', 'active', 'completed'] }).notNull().default('draft'),
+  date: text('date'),                         // YYYY-MM-DD
+  rounds: integer('rounds').notNull().default(3),
+  maxParticipants: integer('max_participants'),
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+});
+
+export const tournamentEntries = sqliteTable(
+  'tournament_entry',
+  {
+    id: text('id').notNull().primaryKey(),
+    tournamentId: text('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+    memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+    seed: integer('seed'),
+    wins: integer('wins').notNull().default(0),
+    losses: integer('losses').notNull().default(0),
+    draws: integer('draws').notNull().default(0),
+    points: integer('points').notNull().default(0),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+  }
+);
+
+export const tournamentMatches = sqliteTable('tournament_match', {
+  id: text('id').notNull().primaryKey(),
+  tournamentId: text('tournament_id').notNull().references(() => tournaments.id, { onDelete: 'cascade' }),
+  round: integer('round').notNull(),
+  player1Id: text('player1_id').references(() => members.id),
+  player2Id: text('player2_id').references(() => members.id), // null = BYE
+  score1: text('score1'),   // "6-4" など文字列で柔軟に
+  score2: text('score2'),
+  winnerId: text('winner_id').references(() => members.id),
+  courtId: text('court_id').references(() => courts.id),
+  scheduledTime: text('scheduled_time'),  // HH:MM
+  completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+});
+
 // Type exports
 export type User = typeof users.$inferSelect;
 export type Member = typeof members.$inferSelect;
@@ -199,3 +249,6 @@ export type Lesson = typeof lessons.$inferSelect;
 export type LessonSlot = typeof lessonSlots.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;
 export type SubstitutionCredit = typeof substitutionCredits.$inferSelect;
+export type Tournament = typeof tournaments.$inferSelect;
+export type TournamentEntry = typeof tournamentEntries.$inferSelect;
+export type TournamentMatch = typeof tournamentMatches.$inferSelect;
