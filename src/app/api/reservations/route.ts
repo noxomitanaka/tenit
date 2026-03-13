@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { reservations, lessonSlots } from '@/db/schema';
+import { reservations, lessonSlots, lessons, members, substitutionCredits } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
+import { notifyReservationConfirmed } from '@/lib/notifications';
 
 export async function GET(req: Request) {
   const auth = await requireAdmin();
@@ -46,14 +47,14 @@ export async function POST(req: Request) {
   }
 
   // 重複予約チェック
-  const [existing] = await db.select().from(reservations).where(
+  const [dup] = await db.select().from(reservations).where(
     and(
       eq(reservations.lessonSlotId, body.lessonSlotId),
       eq(reservations.memberId, body.memberId),
       eq(reservations.status, 'confirmed')
     )
   );
-  if (existing) return NextResponse.json({ error: 'reservation already exists' }, { status: 409 });
+  if (dup) return NextResponse.json({ error: 'reservation already exists' }, { status: 409 });
 
   const [reservation] = await db.insert(reservations).values({
     id: generateId(),
@@ -64,6 +65,30 @@ export async function POST(req: Request) {
     originalReservationId: body.originalReservationId ?? null,
     notes: body.notes?.trim() ?? null,
   }).returning();
+
+  // 振替クレジットを使用済みにする
+  if (body.isSubstitution && body.creditId) {
+    await db.update(substitutionCredits)
+      .set({ usedAt: new Date(), usedReservationId: reservation.id })
+      .where(eq(substitutionCredits.id, body.creditId));
+  }
+
+  // 予約確認通知（非同期・失敗しても予約は通す）
+  const [member] = await db.select().from(members).where(eq(members.id, body.memberId));
+  const [lesson] = await db.select({ title: lessons.title })
+    .from(lessons).where(eq(lessons.id, slot.lessonId));
+  if (member) {
+    notifyReservationConfirmed({
+      memberName: member.name,
+      memberEmail: member.email,
+      memberLineUserId: member.lineUserId,
+      lessonTitle: lesson?.title ?? 'レッスン',
+      date: slot.date,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      isSubstitution: body.isSubstitution ?? false,
+    }).catch(console.error);
+  }
 
   return NextResponse.json(reservation, { status: 201 });
 }

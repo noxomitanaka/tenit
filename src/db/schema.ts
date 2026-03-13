@@ -88,6 +88,7 @@ export const members = sqliteTable('member', {
   joinedAt: integer('joined_at', { mode: 'timestamp_ms' }),
   leftAt: integer('left_at', { mode: 'timestamp_ms' }),
   parentMemberId: text('parent_member_id'), // 家族アカウント: 保護者 → ジュニア
+  lineUserId: text('line_user_id'),          // LINE通知用
   notes: text('notes'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()

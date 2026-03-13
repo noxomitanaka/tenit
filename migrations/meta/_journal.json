@@ -8,6 +8,13 @@
       "when": 1773388882223,
       "tag": "0000_odd_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773392943270,
+      "tag": "0001_striped_lester",
+      "breakpoints": true
     }
   ]
 }

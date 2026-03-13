@@ -11,13 +11,21 @@ interface Member {
   phone: string | null;
   level: string | null;
   status: string;
+  lineUserId: string | null;
   notes: string | null;
+}
+
+interface Credit {
+  id: string;
+  expiresAt: string;
+  usedAt: string | null;
 }
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [member, setMember] = useState<Member | null>(null);
+  const [credits, setCredits] = useState<Credit[]>([]);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,6 +34,11 @@ export default function MemberDetailPage() {
     fetch(`/api/members/${id}`)
       .then((r) => r.json())
       .then(setMember);
+    fetch(`/api/substitution-credits?memberId=${id}`)
+      .then((r) => r.json())
+      .then((data: { credits: Credit[] }) => {
+        if (Array.isArray(data.credits)) setCredits(data.credits);
+      });
   }, [id]);
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
@@ -40,6 +53,7 @@ export default function MemberDetailPage() {
       body: JSON.stringify({
         name: get('name'), nameKana: get('nameKana'),
         email: get('email'), phone: get('phone'),
+        lineUserId: get('lineUserId') || null,
         level: get('level'), notes: get('notes'),
       }),
     });
@@ -59,6 +73,8 @@ export default function MemberDetailPage() {
     if (res.ok) router.push('/dashboard/members');
   }
 
+  const activeCredits = credits.filter(c => !c.usedAt && new Date(c.expiresAt) > new Date());
+
   if (!member) return <div className="p-8 text-gray-400">読み込み中...</div>;
 
   return (
@@ -66,6 +82,11 @@ export default function MemberDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link href="/dashboard/members" className="text-gray-400 hover:text-gray-600">←</Link>
         <h2 className="text-2xl font-bold text-gray-800">{member.name}</h2>
+        {activeCredits.length > 0 && (
+          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-medium">
+            振替 {activeCredits.length}件
+          </span>
+        )}
       </div>
 
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
@@ -78,6 +99,7 @@ export default function MemberDetailPage() {
               { name: 'nameKana', label: 'フリガナ', defaultValue: member.nameKana ?? '' },
               { name: 'email', label: 'メール', type: 'email', defaultValue: member.email ?? '' },
               { name: 'phone', label: '電話', defaultValue: member.phone ?? '' },
+              { name: 'lineUserId', label: 'LINE User ID', defaultValue: member.lineUserId ?? '' },
               { name: 'notes', label: 'メモ', defaultValue: member.notes ?? '' },
             ].map((f) => (
               <div key={f.name}>
@@ -114,16 +136,40 @@ export default function MemberDetailPage() {
               ['メール', member.email],
               ['電話', member.phone],
               ['レベル', member.level === 'beginner' ? '初級' : member.level === 'intermediate' ? '中級' : '上級'],
+              ['LINE User ID', member.lineUserId],
               ['メモ', member.notes],
             ].map(([label, value]) => (
               <div key={label} className="flex gap-4">
-                <dt className="text-sm text-gray-500 w-24 shrink-0">{label}</dt>
+                <dt className="text-sm text-gray-500 w-28 shrink-0">{label}</dt>
                 <dd className="text-sm text-gray-800">{value ?? '-'}</dd>
               </div>
             ))}
           </dl>
         )}
       </div>
+
+      {/* 振替クレジット */}
+      {credits.length > 0 && (
+        <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">振替クレジット ({credits.length}件)</h3>
+          <div className="space-y-2">
+            {credits.map(c => {
+              const expired = new Date(c.expiresAt) <= new Date();
+              const used = !!c.usedAt;
+              const statusLabel = used ? '使用済み' : expired ? '期限切れ' : '有効';
+              const statusColor = used ? 'text-gray-400' : expired ? 'text-red-500' : 'text-emerald-600';
+              return (
+                <div key={c.id} className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">
+                    期限: {new Date(c.expiresAt).toLocaleDateString('ja-JP')}
+                  </span>
+                  <span className={`font-medium ${statusColor}`}>{statusLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {!editing && (
         <div className="flex gap-3 mt-4">

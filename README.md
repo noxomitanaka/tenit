@@ -9,7 +9,7 @@ Open-source tennis club management (self-hosted)
 
 > スコラプラス¥13,200/月・hacomono¥35,000+/月の機能を、自分のサーバーで無料で動かす。
 
-**🚧 開発中 (Phase 0) — MVP coming soon**
+**🚧 開発中 (Phase 2) — 予約・振替・LINE通知**
 
 ---
 
@@ -92,8 +92,9 @@ npm run dev
 ## 開発ロードマップ (Roadmap)
 
 - [x] **Phase 0**: 基盤構築（DB・認証・初期セットアップ）
-- [ ] **Phase 1**: MVP機能（会員管理・予約・振替・大会）
-- [ ] **Phase 2**: LINE通知 + デモサイト公開
+- [x] **Phase 1**: MVP機能（会員管理・スケジュール・予約・振替API・入会申請フォーム）
+- [x] **Phase 2**: 予約管理UI・振替クレジットUI・LINE通知・クラブ設定
+- [ ] **Phase 3**: 会員ポータル・大会管理・QR出席確認
 
 ---
 

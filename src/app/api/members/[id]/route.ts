@@ -38,6 +38,7 @@ export async function PUT(req: Request, { params }: Params) {
     phone: body.phone?.trim() ?? existing.phone,
     level: body.level ?? existing.level,
     status: body.status ?? existing.status,
+    lineUserId: 'lineUserId' in body ? (body.lineUserId || null) : existing.lineUserId,
     notes: body.notes?.trim() ?? existing.notes,
     leftAt: body.status === 'inactive' && !existing.leftAt ? new Date() : existing.leftAt,
   }).where(eq(members.id, id)).returning();
