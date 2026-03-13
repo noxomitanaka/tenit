@@ -21,11 +21,20 @@ interface Credit {
   usedAt: string | null;
 }
 
+interface Fee {
+  id: string;
+  month: string;
+  amount: number;
+  status: string;
+  paidAt: string | null;
+}
+
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [member, setMember] = useState<Member | null>(null);
   const [credits, setCredits] = useState<Credit[]>([]);
+  const [fees, setFees] = useState<Fee[]>([]);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +48,9 @@ export default function MemberDetailPage() {
       .then((data: { credits: Credit[] }) => {
         if (Array.isArray(data.credits)) setCredits(data.credits);
       });
+    fetch(`/api/fees?memberId=${id}`)
+      .then((r) => r.json())
+      .then((data: Fee[]) => { if (Array.isArray(data)) setFees(data); });
   }, [id]);
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
@@ -164,6 +176,31 @@ export default function MemberDetailPage() {
                     期限: {new Date(c.expiresAt).toLocaleDateString('ja-JP')}
                   </span>
                   <span className={`font-medium ${statusColor}`}>{statusLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 月謝履歴 */}
+      {fees.length > 0 && (
+        <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">月謝履歴 ({fees.length}件)</h3>
+          <div className="space-y-2">
+            {fees.map(f => {
+              const statusMap: Record<string, { label: string; color: string }> = {
+                paid: { label: '支払済', color: 'text-emerald-600' },
+                pending: { label: '未払い', color: 'text-amber-600' },
+                overdue: { label: '滞納', color: 'text-red-600' },
+                waived: { label: '免除', color: 'text-gray-400' },
+              };
+              const s = statusMap[f.status] ?? { label: f.status, color: 'text-gray-500' };
+              return (
+                <div key={f.id} className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">{f.month}</span>
+                  <span className="text-gray-800">¥{f.amount.toLocaleString()}</span>
+                  <span className={`font-medium ${s.color}`}>{s.label}</span>
                 </div>
               );
             })}

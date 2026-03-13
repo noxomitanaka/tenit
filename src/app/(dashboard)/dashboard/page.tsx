@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { members, reservations, lessonSlots, substitutionCredits } from '@/db/schema';
-import { eq, and, isNull, gte, sql } from 'drizzle-orm';
+import { members, reservations, lessonSlots, substitutionCredits, monthlyFees } from '@/db/schema';
+import { eq, and, isNull, gte, sql, inArray } from 'drizzle-orm';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -23,18 +23,27 @@ export default async function DashboardPage() {
     .from(substitutionCredits)
     .where(and(isNull(substitutionCredits.usedAt), gte(substitutionCredits.expiresAt, now)));
 
+  const thisMonth = now.toISOString().slice(0, 7);
+  const [overdueRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(monthlyFees)
+    .where(and(
+      inArray(monthlyFees.status, ['pending', 'overdue']),
+      eq(monthlyFees.month, thisMonth),
+    ));
+
   const stats = [
     { label: '今日の予約', value: Number(todayRow?.count ?? 0), unit: '件', color: 'blue' },
     { label: 'アクティブ会員', value: Number(memberRow?.count ?? 0), unit: '名', color: 'emerald' },
     { label: '振替残数（全体）', value: Number(creditRow?.count ?? 0), unit: '件', color: 'amber' },
-    { label: '今月の稼働率', value: '-', unit: '%', color: 'purple' },
+    { label: '今月未払い', value: Number(overdueRow?.count ?? 0), unit: '件', color: 'red' },
   ] as const;
 
   const colorMap = {
     blue: 'text-blue-600',
     emerald: 'text-emerald-600',
     amber: 'text-amber-600',
-    purple: 'text-purple-600',
+    red: 'text-red-600',
   };
 
   return (
