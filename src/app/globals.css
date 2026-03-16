@@ -1,1 +1,34 @@
 @import "tailwindcss";
+
+/* ── melta-ui: 日本語タイポグラフィ基準 ── */
+body {
+  font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 1.125rem;      /* 18px */
+  line-height: 1.8;
+  letter-spacing: 0.02em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  word-break: auto-phrase;
+  letter-spacing: 0.01em;
+}
+
+/* ── melta-ui: アクセシビリティ（focus-visible ring） ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #059669; /* emerald-600 */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── melta-ui: モーション配慮 ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

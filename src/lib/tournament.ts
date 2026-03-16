@@ -81,7 +81,7 @@ export function generateNextEliminationRound(winnerIds: (string | null)[]): Matc
   const pairs: MatchPair[] = [];
   for (let i = 0; i < winnerIds.length; i += 2) {
     pairs.push({
-      player1Id: winnerIds[i] ?? '',
+      player1Id: winnerIds[i]!,
       player2Id: winnerIds[i + 1] ?? null,
     });
   }

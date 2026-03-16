@@ -67,11 +67,11 @@ export default async function DashboardPage() {
           <h3 className="font-semibold text-gray-700 mb-4">クイックアクション</h3>
           <div className="space-y-2">
             <Link href="/dashboard/members/new"
-              className="block px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg text-sm hover:bg-emerald-100 transition-colors">
+              className="block px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-sm hover:bg-emerald-100 transition-colors">
               ＋ 会員を追加する
             </Link>
             <Link href="/dashboard/schedule"
-              className="block px-4 py-2.5 bg-blue-50 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors">
+              className="block px-4 py-2.5 bg-blue-50 text-blue-700 rounded-xl text-sm hover:bg-blue-100 transition-colors">
               📅 スケジュールを見る
             </Link>
           </div>

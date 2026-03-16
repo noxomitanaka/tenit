@@ -43,7 +43,7 @@ export default function RegisterPage() {
           <p className="text-gray-500 text-sm mt-1">アカウントを作成してポータルにアクセスできます</p>
         </div>
 
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {[
@@ -58,12 +58,12 @@ export default function RegisterPage() {
               </label>
               <input name={f.name} type={f.type ?? 'text'} required={f.required}
                 placeholder={f.placeholder}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
           ))}
 
           <button type="submit" disabled={loading}
-            className="w-full bg-emerald-600 text-white py-3 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+            className="w-full bg-emerald-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
             {loading ? '登録中...' : '登録する'}
           </button>
         </form>

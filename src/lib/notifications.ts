@@ -30,7 +30,7 @@ export async function notifyReservationConfirmed(opts: {
       ? sendEmail({
           to: opts.memberEmail,
           subject: `${label}予約を受け付けました`,
-          text,
+          html: text,
         })
       : Promise.resolve(),
     (async () => {
@@ -62,7 +62,7 @@ export async function notifyReservationCancelled(opts: {
       ? sendEmail({
           to: opts.memberEmail,
           subject: 'キャンセル受付・振替クレジット発行',
-          text,
+          html: text,
         })
       : Promise.resolve(),
     (async () => {

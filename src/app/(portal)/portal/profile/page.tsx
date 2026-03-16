@@ -109,7 +109,7 @@ export default function PortalProfilePage() {
               ))}
             </div>
             <button onClick={() => setEditing(true)}
-              className="mt-5 w-full border border-emerald-600 text-emerald-600 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50">
+              className="mt-5 w-full border border-emerald-600 text-emerald-600 py-2 rounded-xl text-sm font-medium hover:bg-emerald-50">
               編集する
             </button>
           </>
@@ -128,17 +128,17 @@ export default function PortalProfilePage() {
                   type={(field as { type?: string }).type ?? 'text'}
                   required={field.required}
                   defaultValue={field.defaultValue}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             ))}
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving}
-                className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
                 {saving ? '保存中...' : '保存する'}
               </button>
               <button type="button" onClick={() => { setEditing(false); setError(''); }}
-                className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50">
+                className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-xl text-sm hover:bg-gray-50">
                 キャンセル
               </button>
             </div>

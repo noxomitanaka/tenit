@@ -19,7 +19,7 @@ export default async function MembersPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">会員管理</h2>
         <Link href="/dashboard/members/new"
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+          className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors">
           ＋ 会員を追加
         </Link>
       </div>

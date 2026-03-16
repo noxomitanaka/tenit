@@ -40,7 +40,7 @@ export function Sidebar({ name, role }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${
                 active
                   ? 'bg-emerald-50 text-emerald-700 font-medium'
                   : 'text-gray-600 hover:bg-gray-100'

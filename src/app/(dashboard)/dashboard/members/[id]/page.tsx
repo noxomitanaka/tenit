@@ -101,7 +101,7 @@ export default function MemberDetailPage() {
         )}
       </div>
 
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         {editing ? (
@@ -118,13 +118,13 @@ export default function MemberDetailPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                 <input name={f.name} type={f.type ?? 'text'} required={f.required}
                   defaultValue={f.defaultValue}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
             ))}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">レベル</label>
               <select name="level" defaultValue={member.level ?? 'beginner'}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm">
                 <option value="beginner">初級</option>
                 <option value="intermediate">中級</option>
                 <option value="advanced">上級</option>
@@ -132,11 +132,11 @@ export default function MemberDetailPage() {
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={loading}
-                className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                className="flex-1 bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
                 {loading ? '保存中...' : '保存'}
               </button>
               <button type="button" onClick={() => setEditing(false)}
-                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50">
+                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-xl text-sm hover:bg-gray-50">
                 キャンセル
               </button>
             </div>
@@ -216,7 +216,7 @@ export default function MemberDetailPage() {
             <img
               src={`/api/members/${id}/qr`}
               alt={`${member.name} QRコード`}
-              className="w-32 h-32 border border-gray-100 rounded-lg"
+              className="w-32 h-32 border border-gray-100 rounded-xl"
             />
             <div className="text-xs text-gray-500 space-y-1 pt-2">
               <p>このQRコードをスキャンすると</p>
@@ -233,11 +233,11 @@ export default function MemberDetailPage() {
       {!editing && (
         <div className="flex gap-3 mt-4">
           <button onClick={() => setEditing(true)}
-            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50">
+            className="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded-xl text-sm hover:bg-gray-50">
             編集
           </button>
           <button onClick={handleDeactivate}
-            className="flex-1 bg-white border border-red-200 text-red-600 py-2 rounded-lg text-sm hover:bg-red-50">
+            className="flex-1 bg-white border border-red-200 text-red-600 py-2 rounded-xl text-sm hover:bg-red-50">
             退会処理
           </button>
         </div>

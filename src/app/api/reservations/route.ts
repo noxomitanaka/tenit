@@ -66,8 +66,23 @@ export async function POST(req: Request) {
     notes: body.notes?.trim() ?? null,
   }).returning();
 
-  // 振替クレジットを使用済みにする
+  // 振替クレジットを使用済みにする（所有者・有効期限チェック付き）
   if (body.isSubstitution && body.creditId) {
+    const [credit] = await db.select().from(substitutionCredits).where(
+      and(
+        eq(substitutionCredits.id, body.creditId),
+        eq(substitutionCredits.memberId, body.memberId)
+      )
+    );
+    if (!credit) {
+      return NextResponse.json({ error: 'Substitution credit not found' }, { status: 404 });
+    }
+    if (credit.usedAt) {
+      return NextResponse.json({ error: 'Credit already used' }, { status: 409 });
+    }
+    if (new Date(credit.expiresAt) < new Date()) {
+      return NextResponse.json({ error: 'Credit expired' }, { status: 409 });
+    }
     await db.update(substitutionCredits)
       .set({ usedAt: new Date(), usedReservationId: reservation.id })
       .where(eq(substitutionCredits.id, body.creditId));

@@ -76,7 +76,7 @@ export default function PortalReservationsPage() {
                   </div>
                   {r.status === 'confirmed' && isFuture && (
                     <button onClick={() => cancel(r.id)} disabled={cancelling === r.id}
-                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 border border-red-200 px-2 py-1 rounded-lg">
+                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 border border-red-200 px-2 py-1 rounded-xl">
                       {cancelling === r.id ? '...' : 'キャンセル'}
                     </button>
                   )}

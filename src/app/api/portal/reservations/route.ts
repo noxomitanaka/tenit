@@ -42,33 +42,57 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'lessonSlotId is required' }, { status: 400 });
   }
 
-  const [slot] = await db.select().from(lessonSlots).where(eq(lessonSlots.id, body.lessonSlotId));
-  if (!slot) return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
-  if (slot.status !== 'open') {
-    return NextResponse.json({ error: 'Slot not available' }, { status: 409 });
+  // スロット確認・重複チェック・INSERT を 1 トランザクションに包んで race condition を防止
+  let slot: typeof lessonSlots.$inferSelect;
+  let reservation: typeof reservations.$inferSelect;
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const [s] = await tx.select().from(lessonSlots).where(eq(lessonSlots.id, body.lessonSlotId));
+      if (!s) throw Object.assign(new Error('Slot not found'), { status: 404 });
+      if (s.status !== 'open') throw Object.assign(new Error('Slot not available'), { status: 409 });
+
+      const [dup] = await tx.select().from(reservations).where(
+        and(
+          eq(reservations.lessonSlotId, body.lessonSlotId),
+          eq(reservations.memberId, auth.member.id),
+          eq(reservations.status, 'confirmed')
+        )
+      );
+      if (dup) throw Object.assign(new Error('Already reserved'), { status: 409 });
+
+      const [created] = await tx.insert(reservations).values({
+        id: generateId(),
+        lessonSlotId: body.lessonSlotId,
+        memberId: auth.member.id,
+        status: 'confirmed',
+        isSubstitution: body.isSubstitution ?? false,
+        notes: body.notes?.trim() ?? null,
+      }).returning();
+
+      return { slot: s, created };
+    });
+
+    slot = result.slot;
+    reservation = result.created;
+  } catch (err) {
+    const e = err as Error & { status?: number };
+    const status = e.status ?? 500;
+    if (status < 500) return NextResponse.json({ error: e.message }, { status });
+    throw err;
   }
 
-  // 重複チェック
-  const [dup] = await db.select().from(reservations).where(
-    and(
-      eq(reservations.lessonSlotId, body.lessonSlotId),
-      eq(reservations.memberId, auth.member.id),
-      eq(reservations.status, 'confirmed')
-    )
-  );
-  if (dup) return NextResponse.json({ error: 'Already reserved' }, { status: 409 });
-
-  const [reservation] = await db.insert(reservations).values({
-    id: generateId(),
-    lessonSlotId: body.lessonSlotId,
-    memberId: auth.member.id,
-    status: 'confirmed',
-    isSubstitution: body.isSubstitution ?? false,
-    notes: body.notes?.trim() ?? null,
-  }).returning();
-
-  // 振替クレジット使用
+  // 振替クレジット使用（所有者・有効期限チェック付き）
   if (body.isSubstitution && body.creditId) {
+    const [credit] = await db.select().from(substitutionCredits).where(
+      and(
+        eq(substitutionCredits.id, body.creditId),
+        eq(substitutionCredits.memberId, auth.member.id)
+      )
+    );
+    if (!credit) return NextResponse.json({ error: 'Substitution credit not found' }, { status: 404 });
+    if (credit.usedAt) return NextResponse.json({ error: 'Credit already used' }, { status: 409 });
+    if (new Date(credit.expiresAt) < new Date()) return NextResponse.json({ error: 'Credit expired' }, { status: 409 });
     await db.update(substitutionCredits)
       .set({ usedAt: new Date(), usedReservationId: reservation.id })
       .where(eq(substitutionCredits.id, body.creditId));

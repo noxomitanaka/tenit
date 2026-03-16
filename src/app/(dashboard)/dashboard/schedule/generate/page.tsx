@@ -54,19 +54,19 @@ export default function GenerateSlotsPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">開始日</label>
             <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">終了日</label>
             <input type="date" value={to} onChange={e => setTo(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">対象レッスン</label>
           <select value={lessonId} onChange={e => setLessonId(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <option value="">すべての定期レッスン</option>
             {lessons.map(l => (
               <option key={l.id} value={l.id}>
@@ -79,14 +79,14 @@ export default function GenerateSlotsPage() {
           )}
         </div>
 
-        <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-700">
+        <div className="bg-blue-50 rounded-xl p-3 text-xs text-blue-700">
           既存のスロットは重複生成しません。最大90日間の範囲で生成できます。
         </div>
 
-        {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+        {error && <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
 
         {result && (
-          <div className="p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm">
+          <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm">
             {result.created > 0
               ? `✓ ${result.created}件のスロットを生成しました`
               : result.message ?? '生成完了'}
@@ -94,7 +94,7 @@ export default function GenerateSlotsPage() {
         )}
 
         <button onClick={handleGenerate} disabled={loading || lessons.length === 0}
-          className="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+          className="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
           {loading ? '生成中...' : 'スロットを生成'}
         </button>
       </div>

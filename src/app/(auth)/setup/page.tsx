@@ -63,7 +63,7 @@ export default function SetupPage() {
           </p>
           <button
             onClick={() => router.push('/login')}
-            className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+            className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition-colors"
           >
             ログインページへ
           </button>
@@ -90,7 +90,7 @@ export default function SetupPage() {
               value={form.clubName}
               onChange={(e) => setForm({ ...form, clubName: e.target.value })}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               placeholder="○○テニスクラブ"
             />
           </div>
@@ -104,7 +104,7 @@ export default function SetupPage() {
               value={form.adminName}
               onChange={(e) => setForm({ ...form, adminName: e.target.value })}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               placeholder="田中 太郎"
             />
           </div>
@@ -118,7 +118,7 @@ export default function SetupPage() {
               value={form.adminEmail}
               onChange={(e) => setForm({ ...form, adminEmail: e.target.value })}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               placeholder="admin@example.com"
             />
           </div>
@@ -132,7 +132,7 @@ export default function SetupPage() {
               value={form.adminPassword}
               onChange={(e) => setForm({ ...form, adminPassword: e.target.value })}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -145,12 +145,12 @@ export default function SetupPage() {
               value={form.adminPasswordConfirm}
               onChange={(e) => setForm({ ...form, adminPasswordConfirm: e.target.value })}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">
               {error}
             </p>
           )}
@@ -158,7 +158,7 @@ export default function SetupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            className="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
           >
             {loading ? 'セットアップ中...' : 'セットアップ開始'}
           </button>

@@ -81,13 +81,13 @@ export default function FeesPage() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">月謝管理</h2>
         <button onClick={generateFees} disabled={generating}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+          className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
           {generating ? '生成中...' : `${month} 一括生成`}
         </button>
       </div>
 
       {message && (
-        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm">{message}</div>
+        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm">{message}</div>
       )}
 
       {/* フィルター */}
@@ -95,12 +95,12 @@ export default function FeesPage() {
         <div>
           <label className="block text-xs text-gray-500 mb-1">月</label>
           <input type="month" value={month} onChange={e => setMonth(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">ステータス</label>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <option value="">全て</option>
             <option value="pending">未払い</option>
             <option value="paid">支払済</option>
@@ -163,25 +163,25 @@ export default function FeesPage() {
                       <div className="flex gap-1.5 justify-end">
                         {row.status !== 'paid' && (
                           <button onClick={() => updateStatus(row.id, 'paid')}
-                            className="text-xs text-emerald-600 hover:text-emerald-800 border border-emerald-200 px-2 py-1 rounded-lg">
+                            className="text-xs text-emerald-600 hover:text-emerald-800 border border-emerald-200 px-2 py-1 rounded-xl">
                             支払済
                           </button>
                         )}
                         {row.status === 'pending' && (
                           <button onClick={() => updateStatus(row.id, 'overdue')}
-                            className="text-xs text-red-500 hover:text-red-700 border border-red-200 px-2 py-1 rounded-lg">
+                            className="text-xs text-red-500 hover:text-red-700 border border-red-200 px-2 py-1 rounded-xl">
                             滞納
                           </button>
                         )}
                         {row.status !== 'waived' && row.status !== 'paid' && (
                           <button onClick={() => updateStatus(row.id, 'waived')}
-                            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-2 py-1 rounded-lg">
+                            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-2 py-1 rounded-xl">
                             免除
                           </button>
                         )}
                         {row.status !== 'pending' && row.status !== 'paid' && (
                           <button onClick={() => updateStatus(row.id, 'pending')}
-                            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-2 py-1 rounded-lg">
+                            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 px-2 py-1 rounded-xl">
                             戻す
                           </button>
                         )}

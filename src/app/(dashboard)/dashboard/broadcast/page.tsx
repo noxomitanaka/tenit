@@ -72,14 +72,14 @@ export default function BroadcastPage() {
         <div>
           <h3 className="text-sm font-semibold text-gray-700 mb-3">新規配信</h3>
 
-          {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
-          {success && <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm">{success}</div>}
+          {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
+          {success && <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm">{success}</div>}
 
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">チャンネル</label>
               <select value={channel} onChange={e => setChannel(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="email">メールのみ</option>
                 <option value="line">LINEのみ</option>
                 <option value="both">メール + LINE</option>
@@ -89,7 +89,7 @@ export default function BroadcastPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">対象</label>
               <select value={targetType} onChange={e => setTargetType(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="all">全会員</option>
                 <option value="group">グループ</option>
                 <option value="level">レベル別</option>
@@ -100,7 +100,7 @@ export default function BroadcastPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">グループ選択</label>
                 <select name="targetId"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="">選択してください</option>
                   {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
@@ -111,7 +111,7 @@ export default function BroadcastPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">レベル</label>
                 <select name="targetId"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="beginner">初級</option>
                   <option value="intermediate">中級</option>
                   <option value="advanced">上級</option>
@@ -122,19 +122,19 @@ export default function BroadcastPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">件名 <span className="text-red-500">*</span></label>
               <input name="subject" required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="クラブからのお知らせ" />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">本文 <span className="text-red-500">*</span></label>
               <textarea name="message" required rows={5}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                 placeholder="お知らせの内容を入力..." />
             </div>
 
             <button type="submit" disabled={loading}
-              className="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+              className="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
               {loading ? '配信中...' : '配信する'}
             </button>
           </form>

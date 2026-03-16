@@ -91,7 +91,7 @@ export default function AttendancePage() {
       </div>
 
       {message && (
-        <div className={`mb-4 p-3 rounded-lg text-sm ${
+        <div className={`mb-4 p-3 rounded-xl text-sm ${
           message.type === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
         }`} onClick={() => setMessage(null)}>
           {message.text}
@@ -107,10 +107,10 @@ export default function AttendancePage() {
             onChange={e => setScanInput(e.target.value)}
             placeholder="QRコードをスキャン（会員ID）"
             autoFocus
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           <button type="submit" disabled={loading || !scanInput}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+            className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
             打刻
           </button>
         </form>
@@ -180,7 +180,7 @@ export default function AttendancePage() {
           {/* 手動追加（予約外） */}
           <div className="mt-3">
             <select onChange={e => { if (e.target.value) { markAttendance(e.target.value, 'manual'); e.target.value = ''; } }}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
               <option value="">＋ 会員を手動追加...</option>
               {allMembers.filter(m => !attendedIds.has(m.id)).map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>

@@ -46,7 +46,7 @@ export default function NewMemberPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
@@ -55,27 +55,27 @@ export default function NewMemberPage() {
             氏名 <span className="text-red-500">*</span>
           </label>
           <input name="name" type="text" required placeholder="田中 花子"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">フリガナ</label>
           <input name="nameKana" type="text" placeholder="タナカ ハナコ"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
           <input name="email" type="email" placeholder="hanako@example.com"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">電話番号</label>
           <input name="phone" type="tel" placeholder="090-1234-5678"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">レベル</label>
           <select name="level"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <option value="beginner">初級</option>
             <option value="intermediate">中級</option>
             <option value="advanced">上級</option>
@@ -83,11 +83,11 @@ export default function NewMemberPage() {
         </div>
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={loading}
-            className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+            className="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
             {loading ? '登録中...' : '会員を登録'}
           </button>
           <Link href="/dashboard/members"
-            className="flex-1 text-center border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+            className="flex-1 text-center border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
             キャンセル
           </Link>
         </div>

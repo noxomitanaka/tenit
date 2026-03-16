@@ -76,7 +76,7 @@ export default function PortalBookPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold text-gray-800">レッスン予約</h1>
 
-      {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+      {error && <div className="p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
 
       {/* 振替チェック */}
       {credits.length > 0 && (
@@ -91,7 +91,7 @@ export default function PortalBookPage() {
           </div>
           {isSubstitution && (
             <select value={creditId} onChange={e => setCreditId(e.target.value)}
-              className="mt-2 w-full border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
+              className="mt-2 w-full border border-blue-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white">
               <option value="">クレジットを選択（任意）</option>
               {credits.map(c => (
                 <option key={c.id} value={c.id}>

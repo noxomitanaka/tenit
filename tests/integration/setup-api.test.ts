@@ -91,7 +91,7 @@ describe('POST /api/setup', () => {
 
       const [user] = await testDb.select().from(users);
       expect(user.hashedPassword).not.toBe(plainPassword);
-      expect(user.hashedPassword).toHaveLength(64); // SHA-256 hex
+      expect(user.hashedPassword?.startsWith('$2b$')).toBe(true); // bcrypt hash
     });
   });
 

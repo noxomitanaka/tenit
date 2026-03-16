@@ -4,7 +4,7 @@ import { authConfig } from './auth.config';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyPassword } from '@/lib/password';
+import { verifyPassword, hashPassword, isLegacyHash } from '@/lib/password';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -30,6 +30,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         if (!valid) return null;
+
+        // SHA-256 旧ハッシュを bcrypt に自動マイグレーション
+        if (isLegacyHash(user.hashedPassword)) {
+          const newHash = await hashPassword(credentials.password as string);
+          await db.update(users)
+            .set({ hashedPassword: newHash })
+            .where(eq(users.id, user.id));
+        }
 
         return {
           id: user.id,

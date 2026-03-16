@@ -98,7 +98,7 @@ export default function TournamentDetailPage() {
       </div>
       {tournament.date && <p className="text-sm text-gray-500 ml-10 mb-6">{tournament.date}</p>}
 
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 参加者 */}
@@ -130,14 +130,14 @@ export default function TournamentDetailPage() {
             {tournament.status === 'draft' && (
               <div className="p-3 flex gap-2 border-t border-gray-50">
                 <select value={addMemberId} onChange={e => setAddMemberId(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  className="flex-1 border border-gray-300 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="">会員を選択</option>
                   {allMembers.filter(m => !entries.find(e => e.entry.memberId === m.id)).map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
                 <button onClick={addEntry} disabled={loading || !addMemberId}
-                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 disabled:opacity-50">
+                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-sm hover:bg-emerald-700 disabled:opacity-50">
                   追加
                 </button>
               </div>
@@ -146,13 +146,13 @@ export default function TournamentDetailPage() {
 
           {tournament.status === 'draft' && entries.length >= 2 && (
             <button onClick={generateRound} disabled={loading}
-              className="mt-3 w-full bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+              className="mt-3 w-full bg-emerald-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
               {tournament.type === 'round_robin' ? '対戦表を生成' : 'ラウンド1を生成'}
             </button>
           )}
           {tournament.status === 'active' && tournament.type === 'swiss' && (
             <button onClick={generateRound} disabled={loading}
-              className="mt-3 w-full border border-emerald-600 text-emerald-600 py-2 rounded-lg text-sm font-medium hover:bg-emerald-50 disabled:opacity-50">
+              className="mt-3 w-full border border-emerald-600 text-emerald-600 py-2 rounded-xl text-sm font-medium hover:bg-emerald-50 disabled:opacity-50">
               次ラウンドを生成
             </button>
           )}
@@ -195,7 +195,7 @@ export default function TournamentDetailPage() {
                         </div>
                         {/* スコア入力フォーム */}
                         {scoreInput?.matchId === m.id && (
-                          <div className="mt-2 space-y-2 bg-gray-50 rounded-lg p-3">
+                          <div className="mt-2 space-y-2 bg-gray-50 rounded-xl p-3">
                             <div className="flex gap-2 items-center text-xs">
                               <input value={scoreInput.score1} onChange={e => setScoreInput(s => s && { ...s, score1: e.target.value })}
                                 placeholder={nameOf(m.player1Id)} className="flex-1 border rounded px-2 py-1 text-xs" />

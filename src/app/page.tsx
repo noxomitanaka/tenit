@@ -19,13 +19,13 @@ export default function LandingPage() {
         <div className="space-y-3">
           <Link
             href="/login"
-            className="block w-full bg-emerald-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+            className="block w-full bg-emerald-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-emerald-700 transition-colors"
           >
             ログイン
           </Link>
           <Link
             href="/setup"
-            className="block w-full bg-white text-emerald-700 border border-emerald-300 py-3 px-6 rounded-lg font-medium hover:bg-emerald-50 transition-colors"
+            className="block w-full bg-white text-emerald-700 border border-emerald-300 py-3 px-6 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
           >
             初回セットアップ
           </Link>

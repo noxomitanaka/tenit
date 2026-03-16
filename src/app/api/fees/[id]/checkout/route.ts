@@ -7,12 +7,12 @@ import Stripe from 'stripe';
 import { db } from '@/db';
 import { monthlyFees, members, clubSettings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { requireAuth } from '@/lib/api-auth';
+import { requireMember } from '@/lib/api-auth';
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function POST(req: Request, { params }: Params) {
-  const auth = await requireAuth();
+  const auth = await requireMember();
   if (!auth.ok) return auth.response;
 
   const { id } = await params;
@@ -31,6 +31,10 @@ export async function POST(req: Request, { params }: Params) {
     .where(eq(monthlyFees.id, id));
 
   if (!fee) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  // 自分の月謝のみ操作可能
+  if (fee.memberId !== auth.member.id) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   if (fee.status === 'paid') {
     return NextResponse.json({ error: 'Already paid' }, { status: 409 });
   }

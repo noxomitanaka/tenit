@@ -60,10 +60,10 @@ export default function SettingsPage() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">クラブ設定</h2>
 
       {saved && (
-        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm">設定を保存しました</div>
+        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm">設定を保存しました</div>
       )}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -73,7 +73,7 @@ export default function SettingsPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">クラブ名</label>
             <input name="name" required defaultValue={settings.name}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -82,7 +82,7 @@ export default function SettingsPage() {
             </label>
             <input name="substitutionDeadlineDays" type="number" min="1" max="365"
               defaultValue={settings.substitutionDeadlineDays}
-              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-32 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -91,7 +91,7 @@ export default function SettingsPage() {
             </label>
             <input name="defaultMonthlyFee" type="number" min="0"
               defaultValue={settings.defaultMonthlyFee ?? 0}
-              className="w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-40 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
         </div>
 
@@ -108,7 +108,7 @@ export default function SettingsPage() {
             <input name="lineChannelAccessToken" type="text"
               defaultValue={settings.lineChannelAccessToken ?? ''}
               placeholder="設定済み"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -117,9 +117,9 @@ export default function SettingsPage() {
             </label>
             <input name="lineChannelSecret" type="password"
               placeholder="変更する場合のみ入力"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+          <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-500">
             <p className="font-medium text-gray-600 mb-1">Webhook URL（LINE 開発者コンソールに設定）</p>
             <p className="font-mono">{typeof window !== 'undefined' ? window.location.origin : ''}/api/line/webhook</p>
           </div>
@@ -138,28 +138,28 @@ export default function SettingsPage() {
             <input name="stripePublishableKey" type="text"
               defaultValue={settings.stripePublishableKey ?? ''}
               placeholder="pk_live_..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-xs" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Secret Key</label>
             <input name="stripeSecretKey" type="password"
               placeholder="変更する場合のみ入力"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Secret</label>
             <input name="stripeWebhookSecret" type="password"
               placeholder="変更する場合のみ入力"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500">
+          <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-500">
             <p className="font-medium text-gray-600 mb-1">Webhook エンドポイント（Stripe ダッシュボードに設定）</p>
             <p className="font-mono">{typeof window !== 'undefined' ? window.location.origin : ''}/api/stripe/webhook</p>
           </div>
         </div>
 
         <button type="submit" disabled={loading}
-          className="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+          className="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors">
           {loading ? '保存中...' : '設定を保存'}
         </button>
       </form>

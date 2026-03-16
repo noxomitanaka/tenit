@@ -94,7 +94,7 @@ function FeesContent() {
                   </div>
                   {(r.status === 'pending' || r.status === 'overdue') && (
                     <button onClick={() => pay(r.id)} disabled={paying === r.id}
-                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 disabled:opacity-50">
                       {paying === r.id ? '処理中...' : 'カードで支払う'}
                     </button>
                   )}

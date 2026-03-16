@@ -1,36 +1,30 @@
 /**
- * Unit tests: パスワードユーティリティ
+ * Unit tests: パスワードユーティリティ（bcrypt 対応版）
  */
 import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword } from '@/lib/password';
+import { hashPassword, verifyPassword, isLegacyHash } from '@/lib/password';
 
 describe('hashPassword', () => {
-  it('文字列をSHA-256ハッシュに変換する（64文字hex）', async () => {
+  it('文字列を bcrypt ハッシュに変換する', async () => {
     const hash = await hashPassword('mypassword');
     expect(hash).toBeTypeOf('string');
-    expect(hash).toHaveLength(64);
+    expect(hash.startsWith('$2b$')).toBe(true);
   });
 
-  it('同じ入力は常に同じハッシュを返す（決定論的）', async () => {
+  it('同じ入力でも毎回異なるハッシュを返す（bcrypt ソルト）', async () => {
     const h1 = await hashPassword('password123');
     const h2 = await hashPassword('password123');
-    expect(h1).toBe(h2);
-  });
-
-  it('異なる入力は異なるハッシュを返す', async () => {
-    const h1 = await hashPassword('password123');
-    const h2 = await hashPassword('Password123');
-    expect(h1).not.toBe(h2);
+    expect(h1).not.toBe(h2); // salt が異なるため
   });
 
   it('空文字もハッシュ化できる', async () => {
     const hash = await hashPassword('');
-    expect(hash).toHaveLength(64);
+    expect(hash.startsWith('$2b$')).toBe(true);
   });
 
   it('日本語もハッシュ化できる', async () => {
     const hash = await hashPassword('テニスクラブ123');
-    expect(hash).toHaveLength(64);
+    expect(hash.startsWith('$2b$')).toBe(true);
   });
 });
 
@@ -48,5 +42,24 @@ describe('verifyPassword', () => {
   it('大文字小文字の差を区別する', async () => {
     const hash = await hashPassword('Password');
     expect(await verifyPassword('password', hash)).toBe(false);
+  });
+
+  it('旧 SHA-256 ハッシュでも検証できる（移行互換）', async () => {
+    // SHA-256('test') = 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+    const sha256Hash = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+    expect(await verifyPassword('test', sha256Hash)).toBe(true);
+    expect(await verifyPassword('wrong', sha256Hash)).toBe(false);
+  });
+});
+
+describe('isLegacyHash', () => {
+  it('bcrypt ハッシュは false', async () => {
+    const hash = await hashPassword('test');
+    expect(isLegacyHash(hash)).toBe(false);
+  });
+
+  it('SHA-256 ハッシュ（64文字 hex）は true', () => {
+    const sha256Hash = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+    expect(isLegacyHash(sha256Hash)).toBe(true);
   });
 });
