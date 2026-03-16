@@ -36,6 +36,34 @@ export async function requireAdmin(): Promise<AuthResult> {
   return result;
 }
 
+/** admin または coach のみ通過（スケジュール管理・出欠管理用） */
+export async function requireCoach(): Promise<AuthResult> {
+  const result = await requireAuth();
+  if (!result.ok) return result;
+  const role = result.session.user.role;
+  if (role !== 'admin' && role !== 'coach') {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+    };
+  }
+  return result;
+}
+
+/** admin または staff のみ通過（会員・予約閲覧用） */
+export async function requireStaff(): Promise<AuthResult> {
+  const result = await requireAuth();
+  if (!result.ok) return result;
+  const role = result.session.user.role;
+  if (role !== 'admin' && role !== 'staff') {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }),
+    };
+  }
+  return result;
+}
+
 /** ログイン済みかつ members テーブルに紐付いているユーザー専用 */
 export async function requireMember(): Promise<MemberAuthResult> {
   const result = await requireAuth();

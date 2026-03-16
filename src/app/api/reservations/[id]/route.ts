@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { reservations, substitutionCredits, clubSettings } from '@/db/schema';
+import { reservations, substitutionCredits, clubSettings, lessonSlots } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
@@ -39,6 +39,7 @@ export async function PATCH(req: Request, { params }: Params) {
   }).where(eq(reservations.id, id)).returning();
 
   // 通常予約のキャンセル/欠席時に振替クレジットを発行
+  // キャンセル期限を過ぎている場合はクレジット不発行
   let credit = null;
   if (
     (body.status === 'cancelled' || body.status === 'absent') &&
@@ -47,14 +48,28 @@ export async function PATCH(req: Request, { params }: Params) {
   ) {
     const [settings] = await db.select().from(clubSettings).limit(1);
     const deadlineDays = settings?.substitutionDeadlineDays ?? 31;
-    const expiresAt = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000);
+    const cancellationDeadlineHours = settings?.cancellationDeadlineHours ?? 24;
 
-    [credit] = await db.insert(substitutionCredits).values({
-      id: generateId(),
-      memberId: existing.memberId,
-      sourceReservationId: existing.id,
-      expiresAt,
-    }).returning();
+    // スロットの開始日時を取得してキャンセル期限チェック
+    const [slot] = await db.select({ date: lessonSlots.date, startTime: lessonSlots.startTime })
+      .from(lessonSlots).where(eq(lessonSlots.id, existing.lessonSlotId));
+
+    let withinDeadline = true;
+    if (slot) {
+      const lessonStart = new Date(`${slot.date}T${slot.startTime}:00`);
+      const hoursUntilLesson = (lessonStart.getTime() - Date.now()) / (1000 * 60 * 60);
+      withinDeadline = hoursUntilLesson >= cancellationDeadlineHours;
+    }
+
+    if (withinDeadline) {
+      const expiresAt = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000);
+      [credit] = await db.insert(substitutionCredits).values({
+        id: generateId(),
+        memberId: existing.memberId,
+        sourceReservationId: existing.id,
+        expiresAt,
+      }).returning();
+    }
   }
 
   return NextResponse.json({ reservation: updated, credit });

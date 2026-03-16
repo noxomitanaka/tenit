@@ -75,6 +75,9 @@ export async function POST(req: Request) {
   const skipped: string[] = [];
   const errors: Array<{ row: number; message: string }> = [];
 
+  // バリデーション先行: エラーがあっても全件スキップせず、validな行のみ一括INSERT
+  const toInsert: Array<typeof members.$inferInsert> = [];
+
   for (let i = 1; i < lines.length; i++) {
     const row = parseCsvLine(lines[i]);
     const name = col(row, 'name');
@@ -108,7 +111,7 @@ export async function POST(req: Request) {
       continue;
     }
 
-    await db.insert(members).values({
+    toInsert.push({
       id: generateId(),
       name,
       nameKana: col(row, 'namekana') ?? col(row, 'name_kana'),
@@ -119,9 +122,17 @@ export async function POST(req: Request) {
       notes: col(row, 'notes'),
       monthlyFee: monthlyFee ?? null,
     });
-
     inserted.push(name);
     if (email) existingEmails.add(email.toLowerCase());
+  }
+
+  // バリデーション通過分を1トランザクションで一括 INSERT（途中失敗時に全件ロールバック）
+  if (toInsert.length > 0) {
+    await db.transaction(async (tx) => {
+      for (const row of toInsert) {
+        await tx.insert(members).values(row);
+      }
+    });
   }
 
   return NextResponse.json({

@@ -4,6 +4,7 @@ import {
   integer,
   sqliteTable,
   primaryKey,
+  index,
 } from 'drizzle-orm/sqlite-core';
 
 // ─── NextAuth required tables ───────────────────────────────────────────────
@@ -15,7 +16,7 @@ export const users = sqliteTable('user', {
   emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
   image: text('image'),
   // Tenit-specific fields
-  role: text('role', { enum: ['admin', 'coach', 'member'] }).notNull().default('member'),
+  role: text('role', { enum: ['admin', 'coach', 'staff', 'member'] }).notNull().default('member'),
   hashedPassword: text('hashed_password'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
@@ -39,6 +40,7 @@ export const accounts = sqliteTable(
   },
   (account) => ({
     compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
+    userIdIdx: index('account_user_id_idx').on(account.userId),
   })
 );
 
@@ -73,6 +75,7 @@ export const clubSettings = sqliteTable('club_settings', {
   stripePublishableKey: text('stripe_publishable_key'),
   stripeSecretKey: text('stripe_secret_key'),
   stripeWebhookSecret: text('stripe_webhook_secret'),
+  cancellationDeadlineHours: integer('cancellation_deadline_hours').notNull().default(24),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(strftime('%s', 'now') * 1000)`),
@@ -91,7 +94,7 @@ export const members = sqliteTable('member', {
   status: text('status', { enum: ['active', 'inactive'] }).notNull().default('active'),
   joinedAt: integer('joined_at', { mode: 'timestamp_ms' }),
   leftAt: integer('left_at', { mode: 'timestamp_ms' }),
-  parentMemberId: text('parent_member_id'), // 家族アカウント: 保護者 → ジュニア
+  parentMemberId: text('parent_member_id').references(() => members.id, { onDelete: 'set null' }), // 家族アカウント: 保護者 → ジュニア
   lineUserId: text('line_user_id'),          // LINE通知用
   stripeCustomerId: text('stripe_customer_id'), // Stripe顧客ID（自動作成）
   monthlyFee: integer('monthly_fee'),           // 個別月謝（nullの場合クラブデフォルト適用）
@@ -169,25 +172,31 @@ export const lessonSlots = sqliteTable('lesson_slot', {
 
 // ─── Reservations ─────────────────────────────────────────────────────────────
 
-export const reservations = sqliteTable('reservation', {
-  id: text('id').notNull().primaryKey(),
-  lessonSlotId: text('lesson_slot_id').notNull().references(() => lessonSlots.id, { onDelete: 'cascade' }),
-  memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
-  status: text('status', { enum: ['confirmed', 'cancelled', 'absent'] }).notNull().default('confirmed'),
-  isSubstitution: integer('is_substitution', { mode: 'boolean' }).notNull().default(false),
-  originalReservationId: text('original_reservation_id'), // 振替元の予約ID
-  notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(strftime('%s', 'now') * 1000)`),
-});
+export const reservations = sqliteTable(
+  'reservation',
+  {
+    id: text('id').notNull().primaryKey(),
+    lessonSlotId: text('lesson_slot_id').notNull().references(() => lessonSlots.id, { onDelete: 'cascade' }),
+    memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+    status: text('status', { enum: ['confirmed', 'cancelled', 'absent'] }).notNull().default('confirmed'),
+    isSubstitution: integer('is_substitution', { mode: 'boolean' }).notNull().default(false),
+    originalReservationId: text('original_reservation_id'), // 振替元の予約ID
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+  },
+  (r) => ({
+    slotMemberIdx: index('reservation_slot_member_idx').on(r.lessonSlotId, r.memberId),
+  })
+);
 
 // ─── Substitution credits ──────────────────────────────────────────────────────
 
 export const substitutionCredits = sqliteTable('substitution_credit', {
   id: text('id').notNull().primaryKey(),
   memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
-  sourceReservationId: text('source_reservation_id').references(() => reservations.id),
+  sourceReservationId: text('source_reservation_id').references(() => reservations.id, { onDelete: 'set null' }),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   usedAt: integer('used_at', { mode: 'timestamp_ms' }),
   usedReservationId: text('used_reservation_id').references(() => reservations.id),

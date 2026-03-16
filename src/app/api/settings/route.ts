@@ -29,6 +29,9 @@ export async function PUT(req: Request) {
   if (body.substitutionDeadlineDays !== undefined) {
     updateData.substitutionDeadlineDays = Number(body.substitutionDeadlineDays);
   }
+  if (body.cancellationDeadlineHours !== undefined) {
+    updateData.cancellationDeadlineHours = Number(body.cancellationDeadlineHours);
+  }
   if (body.defaultMonthlyFee !== undefined) {
     updateData.defaultMonthlyFee = Number(body.defaultMonthlyFee);
   }

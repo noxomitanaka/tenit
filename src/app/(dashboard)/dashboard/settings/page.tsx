@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 interface Settings {
   name: string;
   substitutionDeadlineDays: number;
+  cancellationDeadlineHours: number;
   defaultMonthlyFee: number;
   lineChannelAccessToken: string | null;
   stripePublishableKey: string | null;
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       body: JSON.stringify({
         name: get('name'),
         substitutionDeadlineDays: Number(get('substitutionDeadlineDays')),
+        cancellationDeadlineHours: Number(get('cancellationDeadlineHours')),
         defaultMonthlyFee: Number(get('defaultMonthlyFee')),
         lineChannelAccessToken: get('lineChannelAccessToken') || null,
         lineChannelSecret: get('lineChannelSecret') || null,
@@ -82,6 +84,15 @@ export default function SettingsPage() {
             </label>
             <input name="substitutionDeadlineDays" type="number" min="1" max="365"
               defaultValue={settings.substitutionDeadlineDays}
+              className="w-32 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              キャンセル期限（時間前）
+              <span className="text-gray-400 font-normal ml-2">この時間を過ぎると振替クレジットが発行されません</span>
+            </label>
+            <input name="cancellationDeadlineHours" type="number" min="0" max="168"
+              defaultValue={settings.cancellationDeadlineHours ?? 24}
               className="w-32 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
