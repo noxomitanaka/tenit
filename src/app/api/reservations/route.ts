@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { reservations, lessonSlots, lessons, members, substitutionCredits } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
 import { notifyReservationConfirmed } from '@/lib/notifications';
@@ -14,17 +14,30 @@ export async function GET(req: Request) {
   const slotId = searchParams.get('slotId');
   const memberId = searchParams.get('memberId');
   const status = searchParams.get('status') as 'confirmed' | 'cancelled' | 'absent' | null;
+  const limitParam = searchParams.get('limit');
+  const offsetParam = searchParams.get('offset');
+  const paginated = limitParam !== null || offsetParam !== null;
 
   const conds = [];
   if (slotId) conds.push(eq(reservations.lessonSlotId, slotId));
   if (memberId) conds.push(eq(reservations.memberId, memberId));
   if (status) conds.push(eq(reservations.status, status));
+  const where = conds.length > 0 ? and(...conds) : undefined;
 
-  const result = await db.select().from(reservations)
-    .where(conds.length > 0 ? and(...conds) : undefined)
-    .orderBy(reservations.createdAt);
+  if (!paginated) {
+    const result = await db.select().from(reservations).where(where).orderBy(reservations.createdAt);
+    return NextResponse.json(result);
+  }
 
-  return NextResponse.json(result);
+  const limit = Math.min(Math.max(1, Number(limitParam) || 50), 200);
+  const offset = Math.max(0, Number(offsetParam) || 0);
+
+  const [result, [{ total }]] = await Promise.all([
+    db.select().from(reservations).where(where).orderBy(reservations.createdAt).limit(limit).offset(offset),
+    db.select({ total: sql<number>`count(*)` }).from(reservations).where(where),
+  ]);
+
+  return NextResponse.json({ data: result, total: Number(total), limit, offset });
 }
 
 export async function POST(req: Request) {

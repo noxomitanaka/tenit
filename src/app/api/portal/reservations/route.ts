@@ -61,6 +61,19 @@ export async function POST(req: Request) {
       );
       if (dup) throw Object.assign(new Error('Already reserved'), { status: 409 });
 
+      // 振替クレジット使用（トランザクション内でアトミックに処理）
+      if (body.isSubstitution && body.creditId) {
+        const [credit] = await tx.select().from(substitutionCredits).where(
+          and(
+            eq(substitutionCredits.id, body.creditId),
+            eq(substitutionCredits.memberId, auth.member.id)
+          )
+        );
+        if (!credit) throw Object.assign(new Error('Substitution credit not found'), { status: 404 });
+        if (credit.usedAt) throw Object.assign(new Error('Credit already used'), { status: 409 });
+        if (new Date(credit.expiresAt) < new Date()) throw Object.assign(new Error('Credit expired'), { status: 409 });
+      }
+
       const [created] = await tx.insert(reservations).values({
         id: generateId(),
         lessonSlotId: body.lessonSlotId,
@@ -69,6 +82,13 @@ export async function POST(req: Request) {
         isSubstitution: body.isSubstitution ?? false,
         notes: body.notes?.trim() ?? null,
       }).returning();
+
+      // クレジット消費（予約作成と同一トランザクション）
+      if (body.isSubstitution && body.creditId) {
+        await tx.update(substitutionCredits)
+          .set({ usedAt: new Date(), usedReservationId: created.id })
+          .where(eq(substitutionCredits.id, body.creditId));
+      }
 
       return { slot: s, created };
     });
@@ -80,22 +100,6 @@ export async function POST(req: Request) {
     const status = e.status ?? 500;
     if (status < 500) return NextResponse.json({ error: e.message }, { status });
     throw err;
-  }
-
-  // 振替クレジット使用（所有者・有効期限チェック付き）
-  if (body.isSubstitution && body.creditId) {
-    const [credit] = await db.select().from(substitutionCredits).where(
-      and(
-        eq(substitutionCredits.id, body.creditId),
-        eq(substitutionCredits.memberId, auth.member.id)
-      )
-    );
-    if (!credit) return NextResponse.json({ error: 'Substitution credit not found' }, { status: 404 });
-    if (credit.usedAt) return NextResponse.json({ error: 'Credit already used' }, { status: 409 });
-    if (new Date(credit.expiresAt) < new Date()) return NextResponse.json({ error: 'Credit expired' }, { status: 409 });
-    await db.update(substitutionCredits)
-      .set({ usedAt: new Date(), usedReservationId: reservation.id })
-      .where(eq(substitutionCredits.id, body.creditId));
   }
 
   // 通知

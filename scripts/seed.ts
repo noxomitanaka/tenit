@@ -29,7 +29,6 @@ async function main() {
     await db.insert(clubSettings).values({
       id: 1,
       name: 'テニスクラブ',
-      email: 'info@example.com',
       substitutionDeadlineDays: 31,
     });
     console.log('✓ Club settings created');
@@ -71,9 +70,9 @@ async function main() {
   const existingGroups = await db.select().from(groups);
   if (existingGroups.length === 0) {
     await db.insert(groups).values([
-      { id: 'group-beginner', name: '初級クラス', maxMembers: 8 },
-      { id: 'group-intermediate', name: '中級クラス', maxMembers: 8 },
-      { id: 'group-advanced', name: '上級クラス', maxMembers: 6 },
+      { id: 'group-beginner', name: '初級クラス' },
+      { id: 'group-intermediate', name: '中級クラス' },
+      { id: 'group-advanced', name: '上級クラス' },
     ]);
     console.log('✓ Groups created (beginner / intermediate / advanced)');
   }
@@ -88,7 +87,7 @@ async function main() {
         type: 'lesson',
         startTime: '10:00',
         endTime: '11:30',
-        dayOfWeek: 1,
+        recurringDayOfWeek: 1,
         isRecurring: true,
         courtId: 'court-1',
         groupId: 'group-beginner',
@@ -100,7 +99,7 @@ async function main() {
         type: 'lesson',
         startTime: '19:00',
         endTime: '20:30',
-        dayOfWeek: 3,
+        recurringDayOfWeek: 3,
         isRecurring: true,
         courtId: 'court-2',
         groupId: 'group-intermediate',

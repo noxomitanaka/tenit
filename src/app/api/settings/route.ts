@@ -11,8 +11,8 @@ export async function GET(_req: Request) {
   const [settings] = await db.select().from(clubSettings);
   if (!settings) return NextResponse.json({ error: 'Not configured' }, { status: 404 });
 
-  // LINE チャンネルシークレットは書き込み専用のため返さない
-  const { lineChannelSecret: _s, ...safe } = settings;
+  // 秘密情報は書き込み専用のため返さない
+  const { lineChannelSecret: _s, stripeSecretKey: _sk, stripeWebhookSecret: _sw, ...safe } = settings;
   return NextResponse.json(safe);
 }
 
@@ -56,6 +56,6 @@ export async function PUT(req: Request) {
     .where(eq(clubSettings.id, existing.id))
     .returning();
 
-  const { lineChannelSecret: _s, ...safe } = updated;
+  const { lineChannelSecret: _s2, stripeSecretKey: _sk2, stripeWebhookSecret: _sw2, ...safe } = updated;
   return NextResponse.json(safe);
 }

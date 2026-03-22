@@ -31,7 +31,7 @@ export async function GET(_req: Request, { params }: Params) {
     color: { dark: '#064e3b', light: '#ffffff' }, // emerald-900
   });
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       'Content-Type': 'image/png',
       'Cache-Control': 'public, max-age=3600',

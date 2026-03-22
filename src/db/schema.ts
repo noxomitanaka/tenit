@@ -157,18 +157,24 @@ export const lessons = sqliteTable('lesson', {
 });
 
 // 個別の枠（定期レッスンの展開済みインスタンス or 単発）
-export const lessonSlots = sqliteTable('lesson_slot', {
-  id: text('id').notNull().primaryKey(),
-  lessonId: text('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
-  date: text('date').notNull(), // YYYY-MM-DD
-  startTime: text('start_time').notNull(),
-  endTime: text('end_time').notNull(),
-  status: text('status', { enum: ['open', 'cancelled', 'completed'] }).notNull().default('open'),
-  cancelReason: text('cancel_reason'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(strftime('%s', 'now') * 1000)`),
-});
+export const lessonSlots = sqliteTable(
+  'lesson_slot',
+  {
+    id: text('id').notNull().primaryKey(),
+    lessonId: text('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(), // YYYY-MM-DD
+    startTime: text('start_time').notNull(),
+    endTime: text('end_time').notNull(),
+    status: text('status', { enum: ['open', 'cancelled', 'completed'] }).notNull().default('open'),
+    cancelReason: text('cancel_reason'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+  },
+  (t) => ({
+    lessonDateIdx: index('lesson_slot_lesson_date_idx').on(t.lessonId, t.date),
+  })
+);
 
 // ─── Reservations ─────────────────────────────────────────────────────────────
 
@@ -193,17 +199,23 @@ export const reservations = sqliteTable(
 
 // ─── Substitution credits ──────────────────────────────────────────────────────
 
-export const substitutionCredits = sqliteTable('substitution_credit', {
-  id: text('id').notNull().primaryKey(),
-  memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
-  sourceReservationId: text('source_reservation_id').references(() => reservations.id, { onDelete: 'set null' }),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  usedAt: integer('used_at', { mode: 'timestamp_ms' }),
-  usedReservationId: text('used_reservation_id').references(() => reservations.id),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(strftime('%s', 'now') * 1000)`),
-});
+export const substitutionCredits = sqliteTable(
+  'substitution_credit',
+  {
+    id: text('id').notNull().primaryKey(),
+    memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+    sourceReservationId: text('source_reservation_id').references(() => reservations.id, { onDelete: 'set null' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    usedAt: integer('used_at', { mode: 'timestamp_ms' }),
+    usedReservationId: text('used_reservation_id').references(() => reservations.id),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+  },
+  (t) => ({
+    memberIdx: index('substitution_credit_member_idx').on(t.memberId),
+  })
+);
 
 // ─── Tournaments ──────────────────────────────────────────────────────────────
 
@@ -235,7 +247,10 @@ export const tournamentEntries = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp_ms' })
       .notNull()
       .default(sql`(strftime('%s', 'now') * 1000)`),
-  }
+  },
+  (t) => ({
+    tournamentMemberIdx: index('tournament_entry_tournament_member_idx').on(t.tournamentId, t.memberId),
+  })
 );
 
 export const tournamentMatches = sqliteTable('tournament_match', {
@@ -257,20 +272,26 @@ export const tournamentMatches = sqliteTable('tournament_match', {
 
 // ─── Monthly fees ─────────────────────────────────────────────────────────────
 
-export const monthlyFees = sqliteTable('monthly_fee', {
-  id: text('id').notNull().primaryKey(),
-  memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
-  month: text('month').notNull(),         // YYYY-MM
-  amount: integer('amount').notNull(),    // 円
-  status: text('status', { enum: ['pending', 'paid', 'overdue', 'waived'] }).notNull().default('pending'),
-  paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
-  stripePaymentIntentId: text('stripe_payment_intent_id'),
-  stripeCheckoutSessionId: text('stripe_checkout_session_id'),
-  notes: text('notes'),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .default(sql`(strftime('%s', 'now') * 1000)`),
-});
+export const monthlyFees = sqliteTable(
+  'monthly_fee',
+  {
+    id: text('id').notNull().primaryKey(),
+    memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+    month: text('month').notNull(),         // YYYY-MM
+    amount: integer('amount').notNull(),    // 円
+    status: text('status', { enum: ['pending', 'paid', 'overdue', 'waived'] }).notNull().default('pending'),
+    paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    stripeCheckoutSessionId: text('stripe_checkout_session_id'),
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .default(sql`(strftime('%s', 'now') * 1000)`),
+  },
+  (t) => ({
+    memberMonthIdx: index('monthly_fee_member_month_idx').on(t.memberId, t.month),
+  })
+);
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
@@ -285,7 +306,10 @@ export const attendances = sqliteTable(
       .notNull()
       .default(sql`(strftime('%s', 'now') * 1000)`),
     markedBy: text('marked_by').references(() => users.id, { onDelete: 'set null' }),
-  }
+  },
+  (t) => ({
+    slotMemberIdx: index('attendance_slot_member_idx').on(t.lessonSlotId, t.memberId),
+  })
 );
 
 // ─── Broadcast messages ───────────────────────────────────────────────────────
@@ -300,6 +324,19 @@ export const broadcastMessages = sqliteTable('broadcast_message', {
   sentCount: integer('sent_count').notNull().default(0),
   sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
   createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+});
+
+// ─── LINE link PINs ──────────────────────────────────────────────────────────
+
+export const lineLinkPins = sqliteTable('line_link_pin', {
+  id: text('id').notNull().primaryKey(),
+  memberId: text('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+  pin: text('pin').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  usedAt: integer('used_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()
     .default(sql`(strftime('%s', 'now') * 1000)`),

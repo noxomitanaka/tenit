@@ -32,11 +32,15 @@ export async function PATCH(req: Request) {
   if (body.email !== undefined) updateData.email = body.email?.trim() || null;
   if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
 
-  const [updated] = await db
+  await db
     .update(members)
     .set(updateData)
-    .where(eq(members.id, auth.member.id))
-    .returning();
+    .where(eq(members.id, auth.member.id));
+
+  const [updated] = await db
+    .select()
+    .from(members)
+    .where(eq(members.id, auth.member.id));
 
   const { id, name, nameKana, email, phone, level, status, lineUserId, notes } = updated;
   return NextResponse.json({ id, name, nameKana, email, phone, level, status, lineUserId, notes });

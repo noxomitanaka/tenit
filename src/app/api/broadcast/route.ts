@@ -33,17 +33,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'channel must be email, line, or both' }, { status: 400 });
   }
 
-  // 対象会員を絞り込む
-  let targetMembers = await db.select().from(members).where(eq(members.status, 'active'));
+  // 対象会員を絞り込む（DB側で完結）
+  let targetMembers;
 
   if (targetType === 'group' && targetId) {
     const groupMemberIds = await db.select({ memberId: memberGroups.memberId })
       .from(memberGroups)
       .where(eq(memberGroups.groupId, targetId));
     const ids = groupMemberIds.map(r => r.memberId);
-    targetMembers = ids.length > 0 ? targetMembers.filter(m => ids.includes(m.id)) : [];
+    targetMembers = ids.length > 0
+      ? await db.select().from(members).where(and(eq(members.status, 'active'), inArray(members.id, ids)))
+      : [];
   } else if (targetType === 'level' && targetId) {
-    targetMembers = targetMembers.filter(m => m.level === targetId);
+    targetMembers = await db.select().from(members)
+      .where(and(eq(members.status, 'active'), eq(members.level, targetId)));
+  } else {
+    targetMembers = await db.select().from(members).where(eq(members.status, 'active'));
   }
 
   if (targetMembers.length === 0) {

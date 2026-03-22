@@ -6,8 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateLineSignature } from '@/lib/line';
 import { db } from '@/db';
-import { clubSettings, members } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { clubSettings, members, lineLinkPins } from '@/db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import type { WebhookRequestBody, FollowEvent, MessageEvent, TextMessage } from '@line/bot-sdk';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -36,18 +36,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       // （リンクは「リンク <会員ID>」メッセージで行う）
     }
 
-    // テキストメッセージ: 「リンク <会員ID>」で会員と紐付け
+    // テキストメッセージ: 「リンク <PIN>」でPIN認証を経て会員と紐付け
     if ((event as MessageEvent).type === 'message') {
       const msg = event as MessageEvent;
       if ((msg.message as TextMessage).type === 'text') {
         const text = (msg.message as TextMessage).text.trim();
-        const match = text.match(/^リンク\s+(.+)$/);
+        const match = text.match(/^リンク\s+(\d{6})$/);
         if (match) {
-          const memberId = match[1].trim();
-          const member = await db.query.members.findFirst({ where: eq(members.id, memberId) });
-          if (member) {
-            await db.update(members).set({ lineUserId }).where(eq(members.id, memberId));
-            console.log(`[LINE webhook] 会員リンク: ${memberId} ← ${lineUserId}`);
+          const pin = match[1];
+          // 未使用かつ有効期限内のPINを検索
+          const [linkPin] = await db.select().from(lineLinkPins).where(
+            and(
+              eq(lineLinkPins.pin, pin),
+              gt(lineLinkPins.expiresAt, new Date()),
+            )
+          );
+          if (linkPin && !linkPin.usedAt) {
+            await db.update(members).set({ lineUserId }).where(eq(members.id, linkPin.memberId));
+            await db.update(lineLinkPins).set({ usedAt: new Date() }).where(eq(lineLinkPins.id, linkPin.id));
+            console.log(`[LINE webhook] PIN認証リンク: ${linkPin.memberId} ← ${lineUserId}`);
+          } else {
+            console.log(`[LINE webhook] 無効なPIN: ${pin}`);
           }
         }
       }

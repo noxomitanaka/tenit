@@ -19,6 +19,9 @@ export async function GET(req: Request) {
   const to = searchParams.get('to') ?? new Date().toISOString().slice(0, 10);
   const groupId = searchParams.get('groupId');
   const memberId = searchParams.get('memberId');
+  const limitParam = searchParams.get('limit');
+  const offsetParam = searchParams.get('offset');
+  const paginated = limitParam !== null || offsetParam !== null;
 
   // 対象会員を絞り込む
   let targetMemberIds: string[] | null = null;
@@ -52,8 +55,12 @@ export async function GET(req: Request) {
 
   const slotIds = slots.map(s => s.id);
 
-  // 出席データ
-  let attendanceQuery = db.select({
+  // 出席データ（会員フィルタもDB WHERE句で実行）
+  const whereConditions = targetMemberIds
+    ? and(inArray(attendances.lessonSlotId, slotIds), inArray(attendances.memberId, targetMemberIds))
+    : inArray(attendances.lessonSlotId, slotIds);
+
+  const filtered = await db.select({
     lessonSlotId: attendances.lessonSlotId,
     memberId: attendances.memberId,
     memberName: members.name,
@@ -62,14 +69,7 @@ export async function GET(req: Request) {
   })
     .from(attendances)
     .innerJoin(members, eq(attendances.memberId, members.id))
-    .where(inArray(attendances.lessonSlotId, slotIds));
-
-  const attendanceRows = await attendanceQuery;
-
-  // 会員別フィルタ
-  const filtered = targetMemberIds
-    ? attendanceRows.filter(a => targetMemberIds!.includes(a.memberId))
-    : attendanceRows;
+    .where(whereConditions);
 
   // 会員別集計
   const byMember: Record<string, { memberId: string; memberName: string; attended: number; slots: string[] }> = {};
@@ -81,16 +81,39 @@ export async function GET(req: Request) {
     byMember[a.memberId].slots.push(a.lessonSlotId);
   }
 
-  const rows = Object.values(byMember).sort((a, b) => b.attended - a.attended);
+  const allRows = Object.values(byMember).sort((a, b) => b.attended - a.attended);
+
+  if (paginated) {
+    const limit = Math.min(Math.max(1, Number(limitParam) || 50), 200);
+    const offset = Math.max(0, Number(offsetParam) || 0);
+    const paginatedRows = allRows.slice(offset, offset + limit);
+
+    return NextResponse.json({
+      data: {
+        from,
+        to,
+        rows: paginatedRows,
+        summary: {
+          totalSlots: slots.length,
+          totalAttendances: filtered.length,
+          uniqueMembers: allRows.length,
+        },
+        slots: slots.map(s => ({ id: s.id, date: s.date, title: s.lessonTitle, startTime: s.startTime })),
+      },
+      total: allRows.length,
+      limit,
+      offset,
+    });
+  }
 
   return NextResponse.json({
     from,
     to,
-    rows,
+    rows: allRows,
     summary: {
       totalSlots: slots.length,
       totalAttendances: filtered.length,
-      uniqueMembers: rows.length,
+      uniqueMembers: allRows.length,
     },
     slots: slots.map(s => ({ id: s.id, date: s.date, title: s.lessonTitle, startTime: s.startTime })),
   });

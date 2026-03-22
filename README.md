@@ -89,6 +89,109 @@ npm run dev
 
 ---
 
+## 本番環境 (Production — Cobe Associe)
+
+### インフラ構成
+
+```
+Browser (HTTPS)
+  └─ https://tenit.cobeassocie.com
+       └─ Cloudflare CDN (TLS終端 + WAF)
+            └─ Cloudflare Tunnel (mba-server)
+                 └─ Mac mini localhost:8080 (Caddy reverse proxy)
+                      └─ localhost:3005 (Next.js / PM2 id=5)
+```
+
+- **ホスト**: Mac mini (M4 Pro, 64GB, macOS)
+- **プロセス管理**: PM2 (`pm2 start npm --name tenit -- run start -- -p 3005`)
+- **リバースプロキシ**: Caddy (host matcher `tenit.cobeassocie.com` → `localhost:3005`)
+- **DNS/CDN**: Cloudflare (CNAME → Cloudflare Tunnel)
+- **DB**: SQLite (`file:./local.db`) — ローカルファイル
+
+### ドメインマップ
+
+| URL | 用途 | 対象ユーザー |
+|-----|------|-------------|
+| `https://tenit.cobeassocie.com/` | ランディングページ | 公開 |
+| `https://tenit.cobeassocie.com/setup` | 初回セットアップ（管理者作成） | 1回のみ |
+| `https://tenit.cobeassocie.com/login` | ログイン（全ロール共通） | 全ユーザー |
+| `https://tenit.cobeassocie.com/register` | 会員セルフ登録 | 新規会員 |
+| `https://tenit.cobeassocie.com/join` | 会員登録（別入口） | 新規会員 |
+| `https://tenit.cobeassocie.com/dashboard/*` | 管理画面 | admin / coach / staff |
+| `https://tenit.cobeassocie.com/portal/*` | 会員ポータル | member |
+
+### ルート × ロール 詳細
+
+```
+/dashboard/                [認証必須] 管理画面
+  ├─ /members              [admin]     会員管理（一覧・登録・編集・CSV入出力）
+  ├─ /schedule             [coach+]    レッスン枠管理（生成・出欠）
+  ├─ /reservations         [staff+]    予約管理
+  ├─ /tournaments          [admin]     大会管理（トーナメント・結果入力）
+  ├─ /fees                 [admin]     月謝管理（一括生成・Stripe決済）
+  ├─ /broadcast            [admin]     一斉連絡（メール/LINE）
+  ├─ /reports              [staff+]    レポート・出席分析
+  └─ /settings             [admin]     クラブ設定（LINE/Stripe連携）
+
+/portal/                   [認証必須] 会員ポータル
+  ├─ /reservations         予約確認・キャンセル
+  ├─ /book                 レッスン空き検索・予約
+  ├─ /fees                 自分の月謝・支払い状況
+  ├─ /credits              振替レッスンクレジット
+  └─ /profile              プロフィール編集
+```
+
+### ロール権限マトリクス
+
+| 機能 | admin | coach | staff | member |
+|------|:-----:|:-----:|:-----:|:------:|
+| Dashboard アクセス | o | o | o | - |
+| Portal アクセス | - | - | - | o |
+| 会員CRUD | o | - | - | - |
+| レッスン枠管理 | o | o | - | - |
+| 予約管理 | o | - | o | - |
+| 大会管理 | o | - | - | - |
+| 月謝管理 | o | - | - | - |
+| 一斉連絡 | o | - | - | - |
+| レポート閲覧 | o | - | o | - |
+| クラブ設定 | o | - | - | - |
+| 自分の予約・支払い | - | - | - | o |
+
+### 同一サーバー上の他アプリ
+
+| URL | アプリ | Port |
+|-----|--------|------|
+| https://tenit.cobeassocie.com | Tenit | 3005 |
+| https://gijiroku.cobeassocie.com | Gijiroku（議事録） | 3004 |
+| https://tennis.cobeassocie.com | Tennis Match Maker | 3001 |
+| https://debate.cobeassocie.com | Debate Webapp | 3003 |
+| https://persona.cobeassocie.com | Persona Survey | 3002 |
+| https://dashboard.cobeassocie.com | CC Dashboard | 18800 |
+
+### 運用コマンド
+
+```bash
+# PM2
+pm2 list                          # 全アプリ状態確認
+pm2 logs tenit --lines 20         # ログ確認
+pm2 restart tenit                 # 再起動
+
+# DB
+cd ~/cc-pjt/apps/tenit
+npx drizzle-kit migrate           # マイグレーション実行
+npx drizzle-kit studio            # DB GUI (localhost:4983)
+npx tsx scripts/seed.ts           # シードデータ投入
+
+# Caddy
+caddy validate --config ~/Caddyfile
+caddy reload --config ~/Caddyfile
+
+# Cloudflare Tunnel
+cloudflared tunnel route dns mba-server <subdomain>.cobeassocie.com
+```
+
+---
+
 ## 開発ロードマップ (Roadmap)
 
 - [x] **Phase 0**: 基盤構築（DB・認証・初期セットアップ）

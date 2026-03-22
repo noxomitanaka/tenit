@@ -116,36 +116,40 @@ export async function PUT(req: Request, { params }: Params) {
     .where(and(eq(tournamentMatches.id, body.matchId), eq(tournamentMatches.tournamentId, tournamentId)));
   if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
-  const [updated] = await db.update(tournamentMatches).set({
-    score1: body.score1 ?? match.score1,
-    score2: body.score2 ?? match.score2,
-    winnerId: body.winnerId,
-    completedAt: new Date(),
-  }).where(eq(tournamentMatches.id, body.matchId)).returning();
+  const updated = await db.transaction(async (tx) => {
+    const [matchResult] = await tx.update(tournamentMatches).set({
+      score1: body.score1 ?? match.score1,
+      score2: body.score2 ?? match.score2,
+      winnerId: body.winnerId,
+      completedAt: new Date(),
+    }).where(eq(tournamentMatches.id, body.matchId)).returning();
 
-  // エントリーの集計更新
-  const loserId = body.winnerId === match.player1Id ? match.player2Id : match.player1Id;
-  if (match.player1Id) {
-    const isWinner = match.player1Id === body.winnerId;
-    const [e] = await db.select().from(tournamentEntries)
-      .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, match.player1Id)));
-    if (e) {
-      await db.update(tournamentEntries).set({
-        wins: isWinner ? e.wins + 1 : e.wins,
-        losses: isWinner ? e.losses : e.losses + 1,
-        points: isWinner ? e.points + 3 : e.points,
-      }).where(eq(tournamentEntries.id, e.id));
+    // エントリーの集計更新
+    const loserId = body.winnerId === match.player1Id ? match.player2Id : match.player1Id;
+    if (match.player1Id) {
+      const isWinner = match.player1Id === body.winnerId;
+      const [e] = await tx.select().from(tournamentEntries)
+        .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, match.player1Id)));
+      if (e) {
+        await tx.update(tournamentEntries).set({
+          wins: isWinner ? e.wins + 1 : e.wins,
+          losses: isWinner ? e.losses : e.losses + 1,
+          points: isWinner ? e.points + 3 : e.points,
+        }).where(eq(tournamentEntries.id, e.id));
+      }
     }
-  }
-  if (loserId) {
-    const [e] = await db.select().from(tournamentEntries)
-      .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, loserId)));
-    if (e) {
-      await db.update(tournamentEntries).set({
-        losses: e.losses + 1,
-      }).where(eq(tournamentEntries.id, e.id));
+    if (loserId) {
+      const [e] = await tx.select().from(tournamentEntries)
+        .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, loserId)));
+      if (e) {
+        await tx.update(tournamentEntries).set({
+          losses: e.losses + 1,
+        }).where(eq(tournamentEntries.id, e.id));
+      }
     }
-  }
+
+    return matchResult;
+  });
 
   return NextResponse.json(updated);
 }

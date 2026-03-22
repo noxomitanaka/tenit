@@ -27,6 +27,7 @@
     "@auth/drizzle-adapter": "^1.11.1",
     "@libsql/client": "^0.17.0",
     "@line/bot-sdk": "^10.6.0",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
     "drizzle-kit": "^0.31.9",
     "drizzle-orm": "^0.45.1",
@@ -40,6 +41,7 @@
     "stripe": "^20.4.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

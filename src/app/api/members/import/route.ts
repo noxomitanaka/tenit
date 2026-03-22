@@ -129,9 +129,7 @@ export async function POST(req: Request) {
   // バリデーション通過分を1トランザクションで一括 INSERT（途中失敗時に全件ロールバック）
   if (toInsert.length > 0) {
     await db.transaction(async (tx) => {
-      for (const row of toInsert) {
-        await tx.insert(members).values(row);
-      }
+      await tx.insert(members).values(toInsert);
     });
   }
 

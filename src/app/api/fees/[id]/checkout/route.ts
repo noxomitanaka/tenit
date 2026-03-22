@@ -67,9 +67,8 @@ export async function POST(req: Request, { params }: Params) {
     await db.update(members).set({ stripeCustomerId: customerId }).where(eq(members.id, fee.memberId));
   }
 
-  const body = await req.json().catch(() => ({}));
-  const successUrl = body.successUrl ?? `${process.env.NEXTAUTH_URL}/portal/fees?paid=1`;
-  const cancelUrl = body.cancelUrl ?? `${process.env.NEXTAUTH_URL}/portal/fees`;
+  // サーバー側でリダイレクトURLを決定（クライアント入力を無視し改ざんを防止）
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
   // Checkout セッション作成
   const session = await stripe.checkout.sessions.create({
@@ -88,8 +87,8 @@ export async function POST(req: Request, { params }: Params) {
       },
     ],
     mode: 'payment',
-    success_url: successUrl,
-    cancel_url: cancelUrl,
+    success_url: `${baseUrl}/portal/fees?success=true`,
+    cancel_url: `${baseUrl}/portal/fees?canceled=true`,
     metadata: { feeId: fee.id, memberId: fee.memberId, month: fee.month },
   });
 

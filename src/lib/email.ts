@@ -16,24 +16,23 @@ function createTransporter() {
 interface SendEmailParams {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
+  text?: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailParams) {
+export async function sendEmail({ to, subject, html, text }: SendEmailParams) {
   const transporter = createTransporter();
   if (!transporter) {
     // SMTP未設定時はログのみ（開発環境）
     console.log(`[Email] to=${to} subject=${subject}`);
     return;
   }
-  await transporter.sendMail({ from: process.env.SMTP_USER, to, subject, html });
+  await transporter.sendMail({
+    from: process.env.SMTP_USER,
+    to,
+    subject,
+    ...(html ? { html } : {}),
+    ...(text ? { text } : {}),
+  });
 }
 
-export function reservationConfirmHtml(memberName: string, date: string, startTime: string) {
-  return `<p>${memberName} 様</p><p>${date} ${startTime} のレッスン予約を受け付けました。</p>`;
-}
-
-export function substitutionCreditHtml(memberName: string, expiresAt: Date) {
-  const exp = expiresAt.toLocaleDateString('ja-JP');
-  return `<p>${memberName} 様</p><p>振替レッスンが ${exp} まで利用可能です。</p>`;
-}
