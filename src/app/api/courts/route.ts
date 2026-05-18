@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { courts } from '@/db/schema';
 import { asc } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -22,14 +22,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
-  const [court] = await db.insert(courts).values({
+  const [court] = asRows(await db.insert(courts).values({
     id: generateId(),
     name: body.name.trim(),
     surface: body.surface ?? null,
     isIndoor: body.isIndoor ?? false,
     isActive: true,
     sortOrder: body.sortOrder ?? 0,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(court, { status: 201 });
 }

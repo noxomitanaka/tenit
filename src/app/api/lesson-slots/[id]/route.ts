@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { lessonSlots } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -32,10 +32,10 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'invalid status' }, { status: 400 });
   }
 
-  const [updated] = await db.update(lessonSlots).set({
+  const [updated] = asRows(await db.update(lessonSlots).set({
     status: body.status ?? existing.status,
     cancelReason: body.cancelReason ?? existing.cancelReason,
-  }).where(eq(lessonSlots.id, id)).returning();
+  }).where(eq(lessonSlots.id, id)).returning());
 
   return NextResponse.json(updated);
 }

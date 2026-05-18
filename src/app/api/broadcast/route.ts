@@ -3,7 +3,7 @@
  * GET  /api/broadcast — 配信履歴
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { broadcastMessages, members, memberGroups, clubSettings } from '@/db/schema';
 import { eq, and, desc, inArray } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   const [settings] = await db.select().from(clubSettings);
 
   // 配信記録を先に保存（非同期送信の前に）
-  const [record] = await db.insert(broadcastMessages).values({
+  const [record] = asRows(await db.insert(broadcastMessages).values({
     id: generateId(),
     subject: subject.trim(),
     body: message.trim(),
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     targetType: targetType ?? 'all',
     targetId: targetId ?? null,
     createdBy: auth.session.user.id ?? null,
-  }).returning();
+  }).returning());
 
   // 非同期で配信（Promise.allSettled で部分失敗を許容）
   let sentCount = 0;

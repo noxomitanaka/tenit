@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { tournaments, tournamentEntries, members } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -30,12 +30,12 @@ export async function POST(req: Request, { params }: Params) {
     .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, body.memberId)));
   if (dup) return NextResponse.json({ error: 'Already registered' }, { status: 409 });
 
-  const [entry] = await db.insert(tournamentEntries).values({
+  const [entry] = asRows(await db.insert(tournamentEntries).values({
     id: generateId(),
     tournamentId,
     memberId: body.memberId,
     seed: body.seed ?? null,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(entry, { status: 201 });
 }

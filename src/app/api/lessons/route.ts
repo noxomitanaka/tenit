@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { lessons } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'startTime and endTime are required' }, { status: 400 });
   }
 
-  const [lesson] = await db.insert(lessons).values({
+  const [lesson] = asRows(await db.insert(lessons).values({
     id: generateId(),
     title: body.title.trim(),
     coachId: body.coachId ?? null,
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     endTime: body.endTime,
     maxParticipants: body.maxParticipants ?? null,
     notes: body.notes?.trim() ?? null,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(lesson, { status: 201 });
 }

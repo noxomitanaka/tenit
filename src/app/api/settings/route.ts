@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { clubSettings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -51,10 +51,10 @@ export async function PUT(req: Request) {
     updateData.stripeWebhookSecret = body.stripeWebhookSecret || null;
   }
 
-  const [updated] = await db.update(clubSettings)
+  const [updated] = asRows(await db.update(clubSettings)
     .set(updateData)
     .where(eq(clubSettings.id, existing.id))
-    .returning();
+    .returning());
 
   const { lineChannelSecret: _s2, stripeSecretKey: _sk2, stripeWebhookSecret: _sw2, ...safe } = updated;
   return NextResponse.json(safe);

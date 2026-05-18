@@ -1,0 +1,56 @@
+name: 💡 Feature Request
+description: 新機能や改善を提案する / Suggest an enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したい課題 / Problem
+      description: 誰がどんな場面で何に困っているか
+      placeholder: コーチが毎週の振替リマインドを手動で送っており、忘れることが多い
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する解決策 / Proposed solution
+      description: 機能仕様・UI イメージ・API 仕様などを書ける範囲で
+      placeholder: 振替期限の 3 日前に自動で LINE / メールリマインドを送る設定を管理画面に追加する
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案 / Alternatives considered
+      description: 検討した他のアプローチとその却下理由
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: スコープ / Scope
+      options:
+        - 単一機能（既存画面の改修）
+        - 複数画面にまたがる
+        - 新しいモジュール / セクション
+        - 外部サービス連携（追加 API）
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 補足情報 / Additional context
+      description: スクリーンショット・参照リンク・関連 Issue
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 確認事項
+      options:
+        - label: 既存の Issue / Discussion を検索し、重複がないことを確認した
+          required: true
+        - label: AGPL-3.0 ライセンス下で実装されることに同意する
+          required: true

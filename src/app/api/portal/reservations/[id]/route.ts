@@ -2,7 +2,7 @@
  * 会員ポータル予約キャンセル
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { reservations, lessonSlots, lessons, members, substitutionCredits, clubSettings } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -23,10 +23,10 @@ export async function DELETE(_req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Already cancelled' }, { status: 409 });
   }
 
-  const [updated] = await db.update(reservations)
+  const [updated] = asRows(await db.update(reservations)
     .set({ status: 'cancelled' })
     .where(eq(reservations.id, id))
-    .returning();
+    .returning());
 
   // 振替クレジット発行（通常予約のキャンセルのみ）
   let credit = null;
@@ -34,12 +34,12 @@ export async function DELETE(_req: Request, { params }: Params) {
     const [settings] = await db.select().from(clubSettings);
     const deadlineDays = settings?.substitutionDeadlineDays ?? 31;
     const expiresAt = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000);
-    [credit] = await db.insert(substitutionCredits).values({
+    [credit] = asRows(await db.insert(substitutionCredits).values({
       id: generateId(),
       memberId: auth.member.id,
       sourceReservationId: existing.id,
       expiresAt,
-    }).returning();
+    }).returning());
 
     // キャンセル通知
     const [slot] = await db.select().from(lessonSlots).where(eq(lessonSlots.id, existing.lessonSlotId));

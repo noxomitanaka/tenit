@@ -42,6 +42,12 @@ Thumbs.db
 # Test coverage
 coverage/
 
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
+# Local task specs (development only)
+.cursor-tasks/
+
 # Security
 *.pem
 *.key

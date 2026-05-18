@@ -4,7 +4,7 @@
  * DELETE /api/members/[id]/family?childId= — 紐付け解除
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { members } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -62,11 +62,11 @@ export async function POST(req: Request, { params }: Params) {
     );
   }
 
-  const [updated] = await db
+  const [updated] = asRows(await db
     .update(members)
     .set({ parentMemberId: parentId })
     .where(eq(members.id, body.childId))
-    .returning();
+    .returning());
 
   return NextResponse.json(updated, { status: 201 });
 }

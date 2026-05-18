@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 
-vi.mock('@/db', () => ({ db: testDb }));
+vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 
 import { testDb } from '../setup';
 import { vi } from 'vitest';

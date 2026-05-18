@@ -3,13 +3,14 @@
 **テニスクラブ・スクール管理OSS — 自己ホスト型**
 Open-source tennis club management (self-hosted)
 
+[![CI](https://github.com/noxomitanaka/tenit/actions/workflows/ci.yml/badge.svg)](https://github.com/noxomitanaka/tenit/actions/workflows/ci.yml)
 [![AGPL-3.0 License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org)
 
 > スコラプラス¥13,200/月・hacomono¥35,000+/月の機能を、自分のサーバーで無料で動かす。
 
-**🚧 開発中 (Phase 2) — 予約・振替・LINE通知**
+**✅ 本番稼働中 — Phase 7完了（権限システム・Stripe決済・QR出席・月謝管理）**
 
 ---
 
@@ -20,6 +21,54 @@ Open-source tennis club management (self-hosted)
 - **振替レッスン管理** — 欠席 → 振替可能枠自動表示・期限管理（日本固有の重要機能）
 - **大会・イベント管理** — スイスドロー / トーナメント / リーグ戦（[tennis-match-maker](https://github.com/noxomitanaka/tennis-match-maker) 統合）
 - **メール / LINE 通知** — 予約確認・振替リマインド・一斉配信
+
+---
+
+## なぜ Tenit か (Why Tenit)
+
+- **完全自己ホスト** — データは自分のサーバに置く。SaaS への月額課金不要
+- **日本のテニス文化に最適化** — 振替レッスン・期限管理など、日本固有の運用を一級市民として扱う
+- **モダンスタック** — Next.js 15 / TypeScript / Drizzle ORM / SQLite or PostgreSQL
+- **AGPL-3.0** — フォークも改変も自由。商用ホスト時は同ライセンスでの公開義務
+
+| | スコラプラス | hacomono | **Tenit** |
+|---|---|---|---|
+| 月額 | ¥13,200〜 | ¥35,000〜 | ¥0（自己ホスト） |
+| 振替管理 | ◯ | ◯ | ◯ |
+| LINE 連携 | △ | ◯ | ◯ |
+| データ所有 | SaaS | SaaS | **自分** |
+| カスタマイズ | × | × | **ソース改変自由** |
+
+## スクリーンショット (Screenshots)
+
+> 撮影予定。公開準備中。
+
+## 既知の制約 (Known Issues)
+
+OSS公開フェーズ初期のため、以下は **コントリビュート歓迎** 領域:
+
+- 振替クレジット発行ロジックに 2 件の integration test が失敗中（`tests/integration/reservations-api.test.ts`）
+- ESLint 設定が `.next/` ビルド成果物まで scan するため `npm run lint` が大量警告を出す（`eslint.config.mjs` の `ignores` 追加で解決）
+- スクリーンショット未撮影
+- 多言語対応は未着手（i18n 設計募集中）
+
+CI は `npm run build` がパスすることのみブロッキング条件。test ステップは non-blocking で稼働中（修正 PR 歓迎）。
+
+---
+
+## ドキュメント (Documentation)
+
+- [CONTRIBUTING](./CONTRIBUTING.md) — 開発参加方法
+- [SECURITY](./SECURITY.md) — 脆弱性報告
+- [CODE_OF_CONDUCT](./CODE_OF_CONDUCT.md) — 行動規範
+- [LICENSE](./LICENSE) — AGPL-3.0
+
+## コミュニティ (Community)
+
+- 🐛 バグ報告: [Issues](https://github.com/noxomitanaka/tenit/issues)
+- 💡 機能提案: [Issues](https://github.com/noxomitanaka/tenit/issues)
+- 💬 質問・議論: [Discussions](https://github.com/noxomitanaka/tenit/discussions)
+- 🔒 脆弱性報告: [Security Advisories](https://github.com/noxomitanaka/tenit/security/advisories/new)
 
 ---
 
@@ -197,7 +246,11 @@ cloudflared tunnel route dns mba-server <subdomain>.cobeassocie.com
 - [x] **Phase 0**: 基盤構築（DB・認証・初期セットアップ）
 - [x] **Phase 1**: MVP機能（会員管理・スケジュール・予約・振替API・入会申請フォーム）
 - [x] **Phase 2**: 予約管理UI・振替クレジットUI・LINE通知・クラブ設定
-- [ ] **Phase 3**: 会員ポータル・大会管理・QR出席確認
+- [x] **Phase 3**: 会員ポータル・大会管理・QR出席確認
+- [x] **Phase 4**: QR出席確認・定期スロット生成・一斉配信・出席レポート
+- [x] **Phase 5**: 月謝管理・Stripe決済・家族アカウント・CSV入出力
+- [x] **Phase 6**: ポータル完全化・通知・ヘルスチェック
+- [x] **Phase 7**: 権限システム拡張・キャンセルポリシー・セキュリティ強化
 
 ---
 

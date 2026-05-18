@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { reservations, lessonSlots, lessons, members, substitutionCredits } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
       );
       if (dup) throw Object.assign(new Error('reservation already exists'), { status: 409 });
 
-      const [created] = await tx.insert(reservations).values({
+      const [created] = asRows(await tx.insert(reservations).values({
         id: generateId(),
         lessonSlotId: body.lessonSlotId,
         memberId: body.memberId,
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
         isSubstitution: body.isSubstitution ?? false,
         originalReservationId: body.originalReservationId ?? null,
         notes: body.notes?.trim() ?? null,
-      }).returning();
+      }).returning());
 
       // 振替クレジットを使用済みにする（所有者・有効期限チェック付き）
       if (body.isSubstitution && body.creditId) {

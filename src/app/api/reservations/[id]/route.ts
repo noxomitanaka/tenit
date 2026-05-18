@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { reservations, substitutionCredits, clubSettings, lessonSlots } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -33,10 +33,10 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'invalid status' }, { status: 400 });
   }
 
-  const [updated] = await db.update(reservations).set({
+  const [updated] = asRows(await db.update(reservations).set({
     status: body.status,
     notes: body.notes ?? existing.notes,
-  }).where(eq(reservations.id, id)).returning();
+  }).where(eq(reservations.id, id)).returning());
 
   // 通常予約のキャンセル/欠席時に振替クレジットを発行
   // キャンセル期限を過ぎている場合はクレジット不発行
@@ -63,12 +63,12 @@ export async function PATCH(req: Request, { params }: Params) {
 
     if (withinDeadline) {
       const expiresAt = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000);
-      [credit] = await db.insert(substitutionCredits).values({
+      [credit] = asRows(await db.insert(substitutionCredits).values({
         id: generateId(),
         memberId: existing.memberId,
         sourceReservationId: existing.id,
         expiresAt,
-      }).returning();
+      }).returning());
     }
   }
 

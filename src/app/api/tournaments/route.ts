@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { tournaments } from '@/db/schema';
 import { desc, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
-  const [tournament] = await db.insert(tournaments).values({
+  const [tournament] = asRows(await db.insert(tournaments).values({
     id: generateId(),
     name: body.name.trim(),
     type: body.type ?? 'swiss',
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     rounds: body.rounds ? Number(body.rounds) : 3,
     maxParticipants: body.maxParticipants ? Number(body.maxParticipants) : null,
     notes: body.notes?.trim() ?? null,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(tournament, { status: 201 });
 }

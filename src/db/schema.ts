@@ -5,6 +5,7 @@ import {
   sqliteTable,
   primaryKey,
   index,
+  type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core';
 
 // ─── NextAuth required tables ───────────────────────────────────────────────
@@ -94,7 +95,7 @@ export const members = sqliteTable('member', {
   status: text('status', { enum: ['active', 'inactive'] }).notNull().default('active'),
   joinedAt: integer('joined_at', { mode: 'timestamp_ms' }),
   leftAt: integer('left_at', { mode: 'timestamp_ms' }),
-  parentMemberId: text('parent_member_id').references(() => members.id, { onDelete: 'set null' }), // 家族アカウント: 保護者 → ジュニア
+  parentMemberId: text('parent_member_id').references((): AnySQLiteColumn => members.id, { onDelete: 'set null' }), // 家族アカウント: 保護者 → ジュニア
   lineUserId: text('line_user_id'),          // LINE通知用
   stripeCustomerId: text('stripe_customer_id'), // Stripe顧客ID（自動作成）
   monthlyFee: integer('monthly_fee'),           // 個別月謝（nullの場合クラブデフォルト適用）

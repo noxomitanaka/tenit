@@ -7,7 +7,7 @@ import { testDb } from '../setup';
 import { clubSettings, members, monthlyFees } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-vi.mock('@/db', () => ({ db: testDb }));
+vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 
 // Stripe モジュールをモック — constructEvent を制御可能にする
 const mockConstructEvent = vi.fn();

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { groups } from '@/db/schema';
 import { asc } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -22,13 +22,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
-  const [group] = await db.insert(groups).values({
+  const [group] = asRows(await db.insert(groups).values({
     id: generateId(),
     name: body.name.trim(),
     description: body.description?.trim() ?? null,
     level: body.level ?? null,
     sortOrder: body.sortOrder ?? 0,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(group, { status: 201 });
 }

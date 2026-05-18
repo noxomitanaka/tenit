@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { tournaments, tournamentEntries, tournamentMatches, members } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -38,13 +38,13 @@ export async function PUT(req: Request, { params }: Params) {
   const [existing] = await db.select().from(tournaments).where(eq(tournaments.id, id));
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [updated] = await db.update(tournaments).set({
+  const [updated] = asRows(await db.update(tournaments).set({
     name: body.name?.trim() ?? existing.name,
     status: body.status ?? existing.status,
     date: body.date ?? existing.date,
     rounds: body.rounds != null ? Number(body.rounds) : existing.rounds,
     notes: body.notes != null ? body.notes.trim() : existing.notes,
-  }).where(eq(tournaments.id, id)).returning();
+  }).where(eq(tournaments.id, id)).returning());
 
   return NextResponse.json(updated);
 }

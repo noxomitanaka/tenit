@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { lessonSlots, lessons } from '@/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const toInsert = generateRecurringSlots(lesson as Parameters<typeof generateRecurringSlots>[0], body.from, body.to);
     if (toInsert.length === 0) return NextResponse.json([], { status: 201 });
 
-    const inserted = await db.insert(lessonSlots).values(toInsert).returning();
+    const inserted = asRows(await db.insert(lessonSlots).values(toInsert).returning());
     return NextResponse.json(inserted, { status: 201 });
   }
 
@@ -58,14 +58,14 @@ export async function POST(req: Request) {
     );
   }
 
-  const [slot] = await db.insert(lessonSlots).values({
+  const [slot] = asRows(await db.insert(lessonSlots).values({
     id: generateId(),
     lessonId: body.lessonId,
     date: body.date,
     startTime: body.startTime,
     endTime: body.endTime,
     status: 'open',
-  }).returning();
+  }).returning());
 
   return NextResponse.json(slot, { status: 201 });
 }

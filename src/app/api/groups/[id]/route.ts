@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { groups } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -27,12 +27,12 @@ export async function PUT(req: Request, { params }: Params) {
   const [existing] = await db.select().from(groups).where(eq(groups.id, id));
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [updated] = await db.update(groups).set({
+  const [updated] = asRows(await db.update(groups).set({
     name: body.name?.trim() ?? existing.name,
     description: body.description?.trim() ?? existing.description,
     level: body.level ?? existing.level,
     sortOrder: body.sortOrder ?? existing.sortOrder,
-  }).where(eq(groups.id, id)).returning();
+  }).where(eq(groups.id, id)).returning());
 
   return NextResponse.json(updated);
 }

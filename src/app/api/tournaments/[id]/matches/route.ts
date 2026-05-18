@@ -4,7 +4,7 @@
  * PUT:  スコア・勝者を記録してエントリーの集計を更新
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { tournaments, tournamentEntries, tournamentMatches, members } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -78,7 +78,7 @@ export async function POST(req: Request, { params }: Params) {
         player2Id: p.player2Id,
       }))
     );
-    const inserted = await db.insert(tournamentMatches).values(values).returning();
+    const inserted = asRows(await db.insert(tournamentMatches).values(values).returning());
     await db.update(tournaments).set({ status: 'active' }).where(eq(tournaments.id, tournamentId));
     return NextResponse.json(inserted, { status: 201 });
   }
@@ -94,7 +94,7 @@ export async function POST(req: Request, { params }: Params) {
     player1Id: p.player1Id,
     player2Id: p.player2Id,
   }));
-  const inserted = await db.insert(tournamentMatches).values(values).returning();
+  const inserted = asRows(await db.insert(tournamentMatches).values(values).returning());
   await db.update(tournaments).set({ status: 'active' }).where(eq(tournaments.id, tournamentId));
 
   return NextResponse.json(inserted, { status: 201 });
@@ -117,12 +117,12 @@ export async function PUT(req: Request, { params }: Params) {
   if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
   const updated = await db.transaction(async (tx) => {
-    const [matchResult] = await tx.update(tournamentMatches).set({
+    const [matchResult] = asRows(await tx.update(tournamentMatches).set({
       score1: body.score1 ?? match.score1,
       score2: body.score2 ?? match.score2,
       winnerId: body.winnerId,
       completedAt: new Date(),
-    }).where(eq(tournamentMatches.id, body.matchId)).returning();
+    }).where(eq(tournamentMatches.id, body.matchId)).returning());
 
     // エントリーの集計更新
     const loserId = body.winnerId === match.player1Id ? match.player2Id : match.player1Id;

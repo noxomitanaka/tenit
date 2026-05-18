@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { courts } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -27,13 +27,13 @@ export async function PUT(req: Request, { params }: Params) {
   const [existing] = await db.select().from(courts).where(eq(courts.id, id));
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [updated] = await db.update(courts).set({
+  const [updated] = asRows(await db.update(courts).set({
     name: body.name?.trim() ?? existing.name,
     surface: body.surface ?? existing.surface,
     isIndoor: body.isIndoor ?? existing.isIndoor,
     isActive: body.isActive ?? existing.isActive,
     sortOrder: body.sortOrder ?? existing.sortOrder,
-  }).where(eq(courts.id, id)).returning();
+  }).where(eq(courts.id, id)).returning());
 
   return NextResponse.json(updated);
 }
@@ -47,10 +47,10 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   // ソフトデリート: isActive=false
-  const [updated] = await db.update(courts)
+  const [updated] = asRows(await db.update(courts)
     .set({ isActive: false })
     .where(eq(courts.id, id))
-    .returning();
+    .returning());
 
   return NextResponse.json(updated);
 }

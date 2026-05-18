@@ -2,7 +2,7 @@
  * POST /api/members/[id]/line-link — LINE連携用6桁PINを発行（有効期限5分）
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { members, lineLinkPins } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -25,12 +25,12 @@ export async function POST(
   const pin = String(randomInt(100000, 999999));
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5分後
 
-  const [created] = await db.insert(lineLinkPins).values({
+  const [created] = asRows(await db.insert(lineLinkPins).values({
     id: generateId(),
     memberId: id,
     pin,
     expiresAt,
-  }).returning();
+  }).returning());
 
   return NextResponse.json({
     pin: created.pin,

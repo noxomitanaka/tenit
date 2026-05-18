@@ -3,7 +3,7 @@
  * POST /api/lesson-slots/[id]/attendance — 出席を打刻（QR/手動）
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { attendances, members, reservations, lessonSlots } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -56,13 +56,13 @@ export async function POST(req: Request, { params }: Params) {
     .where(and(eq(attendances.lessonSlotId, slotId), eq(attendances.memberId, body.memberId)));
   if (dup) return NextResponse.json({ error: 'Already marked' }, { status: 409 });
 
-  const [attendance] = await db.insert(attendances).values({
+  const [attendance] = asRows(await db.insert(attendances).values({
     id: generateId(),
     lessonSlotId: slotId,
     memberId: body.memberId,
     method: body.method ?? 'manual',
     markedBy: auth.session.user.id ?? null,
-  }).returning();
+  }).returning());
 
   // 対応する予約を 'confirmed' → そのまま（出席打刻は予約statusとは独立して管理）
   // ただし予約がなければ absent扱いにしない（QR打刻は独立した出席記録）

@@ -11,7 +11,7 @@ import { users, clubSettings } from '@/db/schema';
 import { count } from 'drizzle-orm';
 
 // @/db をテスト用DBに差し替え
-vi.mock('@/db', () => ({ db: testDb }));
+vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 
 // モック後にルートハンドラをimport（モックが先に必要）
 const { POST } = await import('@/app/api/setup/route');

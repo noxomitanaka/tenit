@@ -3,7 +3,7 @@
  * POST /api/fees — 月謝レコードを手動作成
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { monthlyFees, members } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -76,14 +76,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'month must be YYYY-MM' }, { status: 400 });
   }
 
-  const [fee] = await db.insert(monthlyFees).values({
+  const [fee] = asRows(await db.insert(monthlyFees).values({
     id: generateId(),
     memberId: body.memberId,
     month: body.month,
     amount: Number(body.amount),
     status: body.status ?? 'pending',
     notes: body.notes?.trim() ?? null,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(fee, { status: 201 });
 }

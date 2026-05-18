@@ -1,0 +1,96 @@
+name: 🐛 Bug Report
+description: バグや動作不良を報告する / Report a bug
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告ありがとうございます。再現できる情報をご記入ください。
+        Thanks for the report. Please provide enough detail for us to reproduce.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 概要 / Summary
+      description: 何が起きたか、何を期待していたかを簡潔に
+      placeholder: 予約をキャンセルしたが振替クレジットが発行されない、など
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順 / Steps to reproduce
+      description: 番号付きの手順で書いてください
+      placeholder: |
+        1. /reservations にアクセス
+        2. 予約を選択して「キャンセル」をクリック
+        3. /credits を開く → クレジット 0 件
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作 / Expected behavior
+      placeholder: 振替クレジット 1 件が発行され credits 一覧に表示される
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作 / Actual behavior
+      placeholder: クレジットが発行されず、API は 200 を返すが credit=null
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Tenit バージョン / commit SHA
+      placeholder: main @ 44a2c66
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: デプロイ環境 / Deployment
+      options:
+        - Local (npm run dev)
+        - Docker Compose
+        - Vercel
+        - Self-hosted (other)
+    validations:
+      required: true
+
+  - type: input
+    id: db
+    attributes:
+      label: データベース / Database
+      placeholder: SQLite (local.db) / Turso / PostgreSQL
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js / npm バージョン
+      placeholder: Node 22.x / npm 10.x
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ / Logs
+      description: 関連するエラーログやスタックトレース
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 確認事項
+      options:
+        - label: 既存の Issue を検索し、重複がないことを確認した
+          required: true
+        - label: セキュリティ脆弱性ではない（脆弱性は SECURITY.md の手順で報告）
+          required: true

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { members } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -31,7 +31,7 @@ export async function PUT(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 });
   }
 
-  const [updated] = await db.update(members).set({
+  const [updated] = asRows(await db.update(members).set({
     name: body.name?.trim() ?? existing.name,
     nameKana: body.nameKana?.trim() ?? existing.nameKana,
     email: body.email?.trim() ?? existing.email,
@@ -41,7 +41,7 @@ export async function PUT(req: Request, { params }: Params) {
     lineUserId: 'lineUserId' in body ? (body.lineUserId || null) : existing.lineUserId,
     notes: body.notes?.trim() ?? existing.notes,
     leftAt: body.status === 'inactive' && !existing.leftAt ? new Date() : existing.leftAt,
-  }).where(eq(members.id, id)).returning();
+  }).where(eq(members.id, id)).returning());
 
   return NextResponse.json(updated);
 }
@@ -55,10 +55,10 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   // ソフトデリート: status=inactive
-  const [updated] = await db.update(members)
+  const [updated] = asRows(await db.update(members)
     .set({ status: 'inactive', leftAt: new Date() })
     .where(eq(members.id, id))
-    .returning();
+    .returning());
 
   return NextResponse.json(updated);
 }

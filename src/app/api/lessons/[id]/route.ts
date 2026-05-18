@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { lessons } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
@@ -27,7 +27,7 @@ export async function PUT(req: Request, { params }: Params) {
   const [existing] = await db.select().from(lessons).where(eq(lessons.id, id));
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const [updated] = await db.update(lessons).set({
+  const [updated] = asRows(await db.update(lessons).set({
     title: body.title?.trim() ?? existing.title,
     coachId: body.coachId ?? existing.coachId,
     courtId: body.courtId ?? existing.courtId,
@@ -39,7 +39,7 @@ export async function PUT(req: Request, { params }: Params) {
     endTime: body.endTime ?? existing.endTime,
     maxParticipants: body.maxParticipants ?? existing.maxParticipants,
     notes: body.notes?.trim() ?? existing.notes,
-  }).where(eq(lessons.id, id)).returning();
+  }).where(eq(lessons.id, id)).returning());
 
   return NextResponse.json(updated);
 }

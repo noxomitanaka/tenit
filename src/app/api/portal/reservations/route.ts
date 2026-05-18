@@ -2,7 +2,7 @@
  * 会員ポータル用予約 API（自分の予約のみ操作可能）
  */
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { reservations, lessonSlots, lessons, substitutionCredits } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -74,14 +74,14 @@ export async function POST(req: Request) {
         if (new Date(credit.expiresAt) < new Date()) throw Object.assign(new Error('Credit expired'), { status: 409 });
       }
 
-      const [created] = await tx.insert(reservations).values({
+      const [created] = asRows(await tx.insert(reservations).values({
         id: generateId(),
         lessonSlotId: body.lessonSlotId,
         memberId: auth.member.id,
         status: 'confirmed',
         isSubstitution: body.isSubstitution ?? false,
         notes: body.notes?.trim() ?? null,
-      }).returning();
+      }).returning());
 
       // クレジット消費（予約作成と同一トランザクション）
       if (body.isSubstitution && body.creditId) {

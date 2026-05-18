@@ -8,7 +8,7 @@ import { resetDb } from '../helpers/db';
 import { testDb } from '../setup';
 import { members, lessons, lessonSlots, attendances, users } from '@/db/schema';
 
-vi.mock('@/db', () => ({ db: testDb }));
+vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: { id: 'admin-1', email: 'admin@test.com', name: 'Admin', role: 'admin' as const },

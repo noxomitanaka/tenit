@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
+import { db, asRows } from '@/db';
 import { members } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
   }
 
-  const [member] = await db.insert(members).values({
+  const [member] = asRows(await db.insert(members).values({
     id: generateId(),
     name: body.name.trim(),
     nameKana: body.nameKana?.trim() ?? null,
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     status: 'active',
     joinedAt: body.joinedAt ? new Date(body.joinedAt) : new Date(),
     notes: body.notes?.trim() ?? null,
-  }).returning();
+  }).returning());
 
   return NextResponse.json(member, { status: 201 });
 }
