@@ -109,7 +109,7 @@ describe('POST /api/notifications/reminder', () => {
 
   it('非管理者は401', async () => {
     const { auth } = await import('@/auth');
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    vi.mocked(auth).mockResolvedValueOnce(null as never);
     const res = await POST_REMINDER(makeReq('POST', 'http://localhost/api/notifications/reminder'));
     expect(res.status).toBe(401);
   });
