@@ -14,6 +14,22 @@ Open-source tennis club management (self-hosted)
 
 ---
 
+## デモを試す (Live Demo)
+
+**https://demo-tenit.cobeassocie.com**
+
+以下のアカウントでログインして、役割ごとの画面を試せます（パスワードは全て `demo1234`）。
+
+| 役割 | ログインID | できること |
+|------|-----------|-----------|
+| 管理者 (admin) | `admin@demo.example.com` | 全機能（会員・レッスン・大会・月謝・設定） |
+| スタッフ (staff) | `staff@demo.example.com` | 会員・予約の閲覧 |
+| 会員 (member) | `member@demo.example.com` | 会員ポータル（予約・振替クレジット・月謝確認） |
+
+> デモのデータは**毎日リセット**されます。自由に触って構いません。決済(Stripe)・LINE通知は未設定のため該当機能は動作しません。
+
+---
+
 ## 機能 (Features)
 
 - **会員管理** — プロフィール・グループ・家族アカウント・QRコード出席確認
