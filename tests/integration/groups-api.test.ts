@@ -14,7 +14,7 @@ vi.mock('@/auth', () => ({
 }));
 
 const { GET, POST } = await import('@/app/api/groups/route');
-const { GET: GET_ID, PUT, DELETE } = await import('@/app/api/groups/[id]/route');
+const { PUT, DELETE } = await import('@/app/api/groups/[id]/route');
 
 function makeReq(method: string, url: string, body?: object) {
   return new Request(url, {

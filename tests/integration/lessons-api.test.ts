@@ -15,7 +15,7 @@ vi.mock('@/auth', () => ({
 
 const { GET: GET_LESSONS, POST: POST_LESSON } = await import('@/app/api/lessons/route');
 const { DELETE: DELETE_LESSON } = await import('@/app/api/lessons/[id]/route');
-const { GET: GET_SLOTS, POST: POST_SLOT } = await import('@/app/api/lesson-slots/route');
+const { POST: POST_SLOT } = await import('@/app/api/lesson-slots/route');
 const { PATCH: PATCH_SLOT } = await import('@/app/api/lesson-slots/[id]/route');
 
 function makeReq(method: string, url: string, body?: object) {

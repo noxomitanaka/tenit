@@ -2,7 +2,6 @@
  * GET /api/members/export — 会員一覧を CSV でダウンロード
  * ?status=active|inactive  （省略時: 全件）
  */
-import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { members } from '@/db/schema';
 import { eq } from 'drizzle-orm';

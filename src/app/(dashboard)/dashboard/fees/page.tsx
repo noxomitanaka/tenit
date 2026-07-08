@@ -29,6 +29,7 @@ export default function FeesPage() {
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState('');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchFees(); }, [month, statusFilter]);
 
   async function fetchFees() {
