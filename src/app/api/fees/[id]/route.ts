@@ -7,6 +7,9 @@ import { db } from '@/db';
 import { monthlyFees, members } from '@/db/schema';
 import { eq, sql as drizzleSql } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
+import { isNonNegativeInt, isOneOf } from '@/lib/validation';
+
+const FEE_STATUSES = ['pending', 'paid', 'overdue', 'waived'] as const;
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -56,6 +59,9 @@ export async function PATCH(req: Request, { params }: Params) {
   let clearPaidAt = false;
 
   if (body.status !== undefined) {
+    if (!isOneOf(body.status, FEE_STATUSES)) {
+      return NextResponse.json({ error: 'invalid status' }, { status: 400 });
+    }
     updateData.status = body.status;
     if (body.status === 'paid' && !existing.paidAt) {
       updateData.paidAt = new Date();
@@ -65,7 +71,12 @@ export async function PATCH(req: Request, { params }: Params) {
       clearPaidAt = true;
     }
   }
-  if (body.amount !== undefined) updateData.amount = Number(body.amount);
+  if (body.amount !== undefined) {
+    if (!isNonNegativeInt(body.amount)) {
+      return NextResponse.json({ error: 'amount must be a non-negative integer' }, { status: 400 });
+    }
+    updateData.amount = Number(body.amount);
+  }
   if (body.notes !== undefined) updateData.notes = body.notes?.trim() ?? null;
 
   await db.update(monthlyFees).set(updateData).where(eq(monthlyFees.id, id));

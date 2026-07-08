@@ -72,11 +72,11 @@ Open-source tennis club management (self-hosted)
 
 OSS公開フェーズ初期のため、以下は **コントリビュート歓迎** 領域:
 
-- 振替クレジット発行ロジックに 2 件の integration test が失敗中（`tests/integration/reservations-api.test.ts`）
-- ESLint 設定が `.next/` ビルド成果物まで scan するため `npm run lint` が大量警告を出す（`eslint.config.mjs` の `ignores` 追加で解決）
+- `npm run lint` は 0 error だが警告が残る（未使用変数・`<img>` 等）。段階的な解消 PR 歓迎
 - 多言語対応は未着手（i18n 設計募集中）
+- E2E は会員ポータルの主要ジャーニーが未カバー（integration テストで補完中）
 
-CI は `npm run build` がパスすることのみブロッキング条件。test ステップは non-blocking で稼働中（修正 PR 歓迎）。
+CI は lint・build・test すべてをブロッキング条件として実行する（`npm test` は現在全件パス）。
 
 ---
 
@@ -98,9 +98,13 @@ CI は `npm run build` がパスすることのみブロッキング条件。tes
 
 ## クイックスタート (Quick Start)
 
-### Vercel（推奨・無料）
+### Vercel（無料）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/noxomitanaka/tenit&env=NEXTAUTH_SECRET&envDescription=openssl%20rand%20-base64%2032%20で生成)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/noxomitanaka/tenit&env=NEXTAUTH_SECRET,DATABASE_URL&envDescription=NEXTAUTH_SECRET+and+DATABASE_URL)
+
+> Vercel のファイルシステムは ephemeral のため `file:./local.db` は使えない。
+> 事前に [Turso](https://turso.tech/) 等で DB を作成して `DATABASE_URL`（必要なら `DATABASE_AUTH_TOKEN`）を設定し、
+> 初回デプロイ後に対象 DB へマイグレーションを適用する。
 
 ### Docker Compose
 
@@ -120,6 +124,7 @@ cd tenit
 npm install
 cp .env.example .env.local   # NEXTAUTH_SECRET を設定
 npm run db:migrate           # SQLite DBを初期化
+npm run db:seed              # (任意) サンプル管理者・データを投入
 npm run dev
 # → http://localhost:3000
 ```
@@ -162,36 +167,33 @@ npm run dev
 
 ---
 
-## 本番環境 (Production — Cobe Associe)
+## 本番デプロイ (Self-Hosting)
 
-### インフラ構成
+任意の Node.js ホスト（VPS・自宅サーバー・PaaS）で動かせる。標準構成はリバースプロキシ + プロセスマネージャ。
+
+### 構成例（リバースプロキシ）
 
 ```
 Browser (HTTPS)
-  └─ https://tenit.cobeassocie.com
-       └─ Cloudflare CDN (TLS終端 + WAF)
-            └─ Cloudflare Tunnel (mba-server)
-                 └─ Mac mini localhost:8080 (Caddy reverse proxy)
-                      └─ localhost:3005 (Next.js / PM2 id=5)
+  └─ https://your-domain.example        # DNS / CDN（Cloudflare 等・任意）
+       └─ Reverse proxy (Caddy / Nginx) # TLS 終端
+            └─ localhost:3000 (Next.js)  # プロセスマネージャ（PM2 / systemd）で常駐
 ```
 
-- **ホスト**: Mac mini (M4 Pro, 64GB, macOS)
-- **プロセス管理**: PM2 (`pm2 start npm --name tenit -- run start -- -p 3005`)
-- **リバースプロキシ**: Caddy (host matcher `tenit.cobeassocie.com` → `localhost:3005`)
-- **DNS/CDN**: Cloudflare (CNAME → Cloudflare Tunnel)
-- **DB**: SQLite (`file:./local.db`) — ローカルファイル
+- **プロセス管理**: PM2 例 `pm2 start npm --name tenit -- run start`
+- **リバースプロキシ**: Caddy 例 `your-domain.example { reverse_proxy localhost:3000 }`
+- **DB**: 単一ノードなら SQLite（`file:./data/tenit.db`）、冗長構成やサーバーレスなら Turso/PostgreSQL
 
-### ドメインマップ
+### ルートマップ
 
-| URL | 用途 | 対象ユーザー |
+| パス | 用途 | 対象 |
 |-----|------|-------------|
-| `https://tenit.cobeassocie.com/` | ランディングページ | 公開 |
-| `https://tenit.cobeassocie.com/setup` | 初回セットアップ（管理者作成） | 1回のみ |
-| `https://tenit.cobeassocie.com/login` | ログイン（全ロール共通） | 全ユーザー |
-| `https://tenit.cobeassocie.com/register` | 会員セルフ登録 | 新規会員 |
-| `https://tenit.cobeassocie.com/join` | 会員登録（別入口） | 新規会員 |
-| `https://tenit.cobeassocie.com/dashboard/*` | 管理画面 | admin / coach / staff |
-| `https://tenit.cobeassocie.com/portal/*` | 会員ポータル | member |
+| `/` | ランディングページ | 公開 |
+| `/setup` | 初回セットアップ（管理者作成） | 1回のみ |
+| `/login` | ログイン（全ロール共通） | 全ユーザー |
+| `/register` `/join` | 会員登録 | 新規会員（管理者承認後に有効化） |
+| `/dashboard/*` | 管理画面 | admin / coach / staff |
+| `/portal/*` | 会員ポータル | member |
 
 ### ルート × ロール 詳細
 
@@ -230,37 +232,17 @@ Browser (HTTPS)
 | クラブ設定 | o | - | - | - |
 | 自分の予約・支払い | - | - | - | o |
 
-### 同一サーバー上の他アプリ
-
-| URL | アプリ | Port |
-|-----|--------|------|
-| https://tenit.cobeassocie.com | Tenit | 3005 |
-| https://gijiroku.cobeassocie.com | Gijiroku（議事録） | 3004 |
-| https://tennis.cobeassocie.com | Tennis Match Maker | 3001 |
-| https://debate.cobeassocie.com | Debate Webapp | 3003 |
-| https://persona.cobeassocie.com | Persona Survey | 3002 |
-| https://dashboard.cobeassocie.com | CC Dashboard | 18800 |
-
 ### 運用コマンド
 
 ```bash
-# PM2
-pm2 list                          # 全アプリ状態確認
+# プロセス管理（PM2 の例）
 pm2 logs tenit --lines 20         # ログ確認
 pm2 restart tenit                 # 再起動
 
 # DB
-cd ~/cc-pjt/apps/tenit
-npx drizzle-kit migrate           # マイグレーション実行
-npx drizzle-kit studio            # DB GUI (localhost:4983)
-npx tsx scripts/seed.ts           # シードデータ投入
-
-# Caddy
-caddy validate --config ~/Caddyfile
-caddy reload --config ~/Caddyfile
-
-# Cloudflare Tunnel
-cloudflared tunnel route dns mba-server <subdomain>.cobeassocie.com
+npm run db:migrate                # マイグレーション実行
+npm run db:studio                 # DB GUI (localhost:4983)
+npm run db:seed                   # (任意) サンプルデータ投入
 ```
 
 ---

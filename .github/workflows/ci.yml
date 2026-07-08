@@ -17,7 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          # 配布 Docker イメージ（node:20-alpine）と揃える
+          node-version: "20"
           cache: "npm"
 
       - name: Install dependencies

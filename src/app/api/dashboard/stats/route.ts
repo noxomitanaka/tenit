@@ -3,12 +3,14 @@ import { db } from '@/db';
 import { members, reservations, lessonSlots, substitutionCredits } from '@/db/schema';
 import { eq, and, isNull, gte, sql } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
+import { clubToday } from '@/lib/date';
 
 export async function GET(_req: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
 
-  const today = new Date().toISOString().slice(0, 10);
+  // UTC 日付だと JST 早朝にサーバー日付が前日になり集計がずれる → クラブTZの今日
+  const today = clubToday();
   const now = new Date();
 
   // アクティブ会員数

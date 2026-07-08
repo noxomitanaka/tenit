@@ -8,7 +8,7 @@ import { resetDb } from '../helpers/db';
 import { testDb } from '../setup';
 import { users, members, lessons, lessonSlots, reservations, monthlyFees } from '@/db/schema';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: { id: 'admin-1', email: 'admin@test.com', name: 'Admin', role: 'admin' as const },
@@ -109,7 +109,7 @@ describe('POST /api/notifications/reminder', () => {
 
   it('非管理者は401', async () => {
     const { auth } = await import('@/auth');
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    vi.mocked(auth).mockResolvedValueOnce(null as never);
     const res = await POST_REMINDER(makeReq('POST', 'http://localhost/api/notifications/reminder'));
     expect(res.status).toBe(401);
   });

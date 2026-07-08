@@ -35,8 +35,10 @@ export async function POST(req: Request, { params }: Params) {
   if (fee.memberId !== auth.member.id) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
-  if (fee.status === 'paid') {
-    return NextResponse.json({ error: 'Already paid' }, { status: 409 });
+  // paid（支払済）だけでなく waived（免除）も決済不可。
+  // waived を通すと支払義務のない金額を徴収し、免除記録も webhook で上書き消失する。
+  if (fee.status === 'paid' || fee.status === 'waived') {
+    return NextResponse.json({ error: `Fee is ${fee.status}` }, { status: 409 });
   }
 
   // Stripe シークレットキー取得
@@ -78,6 +80,11 @@ export async function POST(req: Request, { params }: Params) {
     await db.update(members).set({ stripeCustomerId: customerId }).where(eq(members.id, fee.memberId));
   }
 
+  // 本番で NEXTAUTH_URL 未設定だと localhost へリダイレクトし、決済後にユーザーが
+  // 断絶して二重決済を誘発する。設定不備を 503 で顕在化させる。
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_URL) {
+    return NextResponse.json({ error: 'NEXTAUTH_URL is not configured' }, { status: 503 });
+  }
   // サーバー側でリダイレクトURLを決定（クライアント入力を無視し改ざんを防止）
   const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 

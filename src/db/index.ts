@@ -14,8 +14,8 @@ export type DB = typeof db;
 /**
  * drizzle-orm 0.45.x + libsql: .returning() resolves to `any[] | ResultSet`
  * due to an unresolved conditional type. At runtime it always yields a row array.
+ * 入力の要素型を保持して返す（デフォルト any を廃止し呼び出し側の型安全性を確保）。
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function asRows<T = any>(result: unknown): T[] {
-  return result as T[];
+export function asRows<T>(result: T[]): T[] {
+  return result;
 }

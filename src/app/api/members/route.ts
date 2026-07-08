@@ -4,6 +4,7 @@ import { members } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
+import { isNonEmptyString, isValidEmail, isValidDateString, isOneOf, MEMBER_LEVELS } from '@/lib/validation';
 
 export async function GET(req: Request) {
   const auth = await requireAdmin();
@@ -43,8 +44,18 @@ export async function POST(req: Request) {
   if (!auth.ok) return auth.response;
 
   const body = await req.json();
-  if (!body.name || !body.name.trim()) {
+  // body 型不正（name が数値・配列等）での .trim() TypeError→500 を防ぐ
+  if (!isNonEmptyString(body.name, 100)) {
     return NextResponse.json({ error: 'name is required' }, { status: 400 });
+  }
+  if (body.email != null && body.email !== '' && !isValidEmail(body.email.trim?.())) {
+    return NextResponse.json({ error: 'invalid email format' }, { status: 400 });
+  }
+  if (body.level != null && !isOneOf(body.level, MEMBER_LEVELS)) {
+    return NextResponse.json({ error: 'invalid level' }, { status: 400 });
+  }
+  if (body.joinedAt != null && !isValidDateString(body.joinedAt)) {
+    return NextResponse.json({ error: 'joinedAt must be YYYY-MM-DD' }, { status: 400 });
   }
 
   const [member] = asRows(await db.insert(members).values({

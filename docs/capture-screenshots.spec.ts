@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -45,7 +45,7 @@ async function getSessionCookies() {
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-async function snap(page, path: string, url: string, waitForText?: string) {
+async function snap(page: Page, path: string, url: string, waitForText?: string) {
   await page.goto(`${BASE}${url}`);
   await page.waitForLoadState('networkidle').catch(() => {});
   if (waitForText) {

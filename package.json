@@ -8,11 +8,14 @@
     "type": "git",
     "url": "https://github.com/noxomitanaka/tenit"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src scripts tests",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

@@ -3,6 +3,7 @@ import { db, asRows } from '@/db';
 import { members } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
+import { isValidEmail, isOneOf, MEMBER_LEVELS, MEMBER_STATUSES } from '@/lib/validation';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -29,6 +30,15 @@ export async function PUT(req: Request, { params }: Params) {
 
   if (body.name !== undefined && !body.name?.trim()) {
     return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 });
+  }
+  if (body.email != null && body.email !== '' && !isValidEmail(body.email.trim?.())) {
+    return NextResponse.json({ error: 'invalid email format' }, { status: 400 });
+  }
+  if (body.level != null && !isOneOf(body.level, MEMBER_LEVELS)) {
+    return NextResponse.json({ error: 'invalid level' }, { status: 400 });
+  }
+  if (body.status != null && !isOneOf(body.status, MEMBER_STATUSES)) {
+    return NextResponse.json({ error: 'invalid status' }, { status: 400 });
   }
 
   const [updated] = asRows(await db.update(members).set({

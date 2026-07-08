@@ -15,11 +15,8 @@ services:
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
-      - LINE_CHANNEL_ACCESS_TOKEN=${LINE_CHANNEL_ACCESS_TOKEN:-}
-      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET:-}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      # Stripe / LINE は環境変数ではなく管理画面（/dashboard/settings）で設定する。
+      # アプリは clubSettings（DB）からこれらの値を読むため、ここに書いても反映されない。
     volumes:
       - tenit-data:/app/data
     restart: unless-stopped

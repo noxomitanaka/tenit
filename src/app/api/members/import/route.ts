@@ -48,11 +48,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'file field is required' }, { status: 400 });
   }
 
+  // DoS 対策: ファイルサイズ・行数に上限を設ける（全文をメモリ展開するため）
+  const MAX_BYTES = 1_000_000;
+  const MAX_ROWS = 5_000;
+  if ((file as File).size > MAX_BYTES) {
+    return NextResponse.json({ error: 'file too large (max 1MB)' }, { status: 400 });
+  }
+
   const text = await (file as File).text();
   const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '');
 
   if (lines.length < 2) {
     return NextResponse.json({ error: 'CSV must have header + at least 1 data row' }, { status: 400 });
+  }
+  if (lines.length - 1 > MAX_ROWS) {
+    return NextResponse.json({ error: `too many rows (max ${MAX_ROWS})` }, { status: 400 });
   }
 
   const headerLine = lines[0].toLowerCase();
@@ -106,7 +116,8 @@ export async function POST(req: Request) {
     }
 
     const monthlyFee = monthlyFeeStr ? Number(monthlyFeeStr) : null;
-    if (monthlyFeeStr && isNaN(monthlyFee!)) {
+    // isNaN だけだと 'Infinity'・'1e999'・負値・小数が通る。非負の安全整数を必須化。
+    if (monthlyFeeStr && (monthlyFee === null || !Number.isSafeInteger(monthlyFee) || monthlyFee < 0)) {
       errors.push({ row: i + 1, message: `Invalid monthlyFee: ${monthlyFeeStr}` });
       continue;
     }

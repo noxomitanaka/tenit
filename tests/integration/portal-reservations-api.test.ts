@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 // キャンセル期限チェックを通せずクレジット発行テストが壊れる）。
 const FUTURE_DATE = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: { id: 'user-1', email: 'member@test.com', name: '田中', role: 'member' as const },
@@ -203,6 +203,18 @@ describe('POST /api/portal/reservations', () => {
       lessonSlotId: 's1',
     }));
     expect(res.status).toBe(201);
+  });
+
+  it('開始済み・過去のスロットは予約できない（409）', async () => {
+    await seedFixtures();
+    const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    await testDb.insert(lessonSlots).values({
+      id: 's-past', lessonId: 'l1', date: pastDate, startTime: '10:00', endTime: '11:00', status: 'open',
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's-past',
+    }));
+    expect(res.status).toBe(409);
   });
 
   it('同じスロットへの重複予約は409', async () => {

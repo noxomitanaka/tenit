@@ -64,10 +64,11 @@ export async function POST(req: Request) {
 
   if (event.type === 'payment_intent.succeeded') {
     const intent = event.data.object as Stripe.PaymentIntent;
-    // payment_intent ID で検索して対応する月謝を更新
+    // payment_intent ID で対応する月謝を更新。既に paid の行は更新しない
+    // （イベント再配信で paidAt が上書きされ支払日時の監査証跡が壊れるのを防ぐ）。
     await db.update(monthlyFees)
       .set({ status: 'paid', paidAt: new Date(), stripePaymentIntentId: intent.id })
-      .where(eq(monthlyFees.stripePaymentIntentId, intent.id));
+      .where(and(eq(monthlyFees.stripePaymentIntentId, intent.id), ne(monthlyFees.status, 'paid')));
   }
 
   return NextResponse.json({ received: true });

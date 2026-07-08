@@ -8,6 +8,9 @@ import { monthlyFees, members } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
+import { isNonNegativeInt, isOneOf } from '@/lib/validation';
+
+const FEE_STATUSES = ['pending', 'paid', 'overdue', 'waived'] as const;
 
 export async function GET(req: Request) {
   const auth = await requireAdmin();
@@ -74,6 +77,13 @@ export async function POST(req: Request) {
   }
   if (!/^\d{4}-\d{2}$/.test(body.month)) {
     return NextResponse.json({ error: 'month must be YYYY-MM' }, { status: 400 });
+  }
+  // amount は NaN・Infinity・負値・巨大値の DB 混入を防ぐため非負整数を必須化する。
+  if (!isNonNegativeInt(body.amount)) {
+    return NextResponse.json({ error: 'amount must be a non-negative integer' }, { status: 400 });
+  }
+  if (body.status !== undefined && !isOneOf(body.status, FEE_STATUSES)) {
+    return NextResponse.json({ error: 'invalid status' }, { status: 400 });
   }
 
   const [fee] = asRows(await db.insert(monthlyFees).values({

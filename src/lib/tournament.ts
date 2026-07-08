@@ -121,8 +121,3 @@ export function generateRoundRobin(playerIds: string[]): MatchPair[][] {
 
   return rounds;
 }
-
-/** スイスドローの最大ラウンド数（参加者数に基づく推奨値） */
-export function recommendedSwissRounds(playerCount: number): number {
-  return Math.ceil(Math.log2(playerCount)) + 1;
-}

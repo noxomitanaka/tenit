@@ -31,10 +31,11 @@ npm install
 cp .env.example .env.local
 # NEXTAUTH_SECRET を openssl rand -base64 32 で生成して設定
 npm run db:migrate
+npm run db:seed   # (任意) サンプル管理者・データを投入
 npm run dev
 ```
 
-`http://localhost:3000/setup` でクラブ初期設定を行う。
+`http://localhost:3000/setup` でクラブ初期設定を行う（`db:seed` 済みならサンプル管理者でログイン可）。
 
 ### 必要な環境
 

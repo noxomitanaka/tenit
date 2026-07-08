@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `reservation_slot_member_confirmed_uniq` ON `reservation` (`lesson_slot_id`,`member_id`) WHERE status = 'confirmed';

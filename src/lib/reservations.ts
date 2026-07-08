@@ -42,7 +42,9 @@ export async function issueCancellationCredit(
     .from(lessonSlots)
     .where(eq(lessonSlots.id, reservation.lessonSlotId));
   if (slot) {
-    const lessonStart = new Date(`${slot.date}T${slot.startTime}:00`);
+    // クラブのタイムゾーン（JST）を明示。サフィックスなしだとサーバーのローカルTZ
+    // 解釈になり、UTC 運用（Vercel 等）で期限判定が9時間ずれる。
+    const lessonStart = new Date(`${slot.date}T${slot.startTime}:00+09:00`);
     const hoursUntilLesson = (lessonStart.getTime() - Date.now()) / (1000 * 60 * 60);
     if (hoursUntilLesson < cancellationDeadlineHours) return null;
   }

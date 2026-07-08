@@ -9,7 +9,7 @@ import { testDb } from '../setup';
 import { clubSettings, members, monthlyFees, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({ user: { id: 'user-1', name: '田中', role: 'member' as const } }),
 }));
@@ -84,6 +84,14 @@ describe('POST /api/fees/[id]/checkout', () => {
   it('既に支払い済みの月謝は409', async () => {
     await seed();
     await testDb.update(monthlyFees).set({ status: 'paid' }).where(eq(monthlyFees.id, 'fee-1'));
+    const res = await POST(makeReq(), params('fee-1'));
+    expect(res.status).toBe(409);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
+  });
+
+  it('免除（waived）の月謝は決済不可で409', async () => {
+    await seed();
+    await testDb.update(monthlyFees).set({ status: 'waived' }).where(eq(monthlyFees.id, 'fee-1'));
     const res = await POST(makeReq(), params('fee-1'));
     expect(res.status).toBe(409);
     expect(mockSessionCreate).not.toHaveBeenCalled();

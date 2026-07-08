@@ -198,6 +198,11 @@ export const reservations = sqliteTable(
   },
   (r) => ({
     slotMemberIdx: index('reservation_slot_member_idx').on(r.lessonSlotId, r.memberId),
+    // 「同一会員は同一スロットに confirmed 予約1件まで」を DB 層で保証する部分一意制約。
+    // cancelled 後の再予約は許すため status='confirmed' に限定する。
+    slotMemberConfirmedUniq: uniqueIndex('reservation_slot_member_confirmed_uniq')
+      .on(r.lessonSlotId, r.memberId)
+      .where(sql`status = 'confirmed'`),
   })
 );
 
