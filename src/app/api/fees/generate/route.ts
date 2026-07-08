@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { monthlyFees, members, clubSettings } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
 

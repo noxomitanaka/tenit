@@ -4,7 +4,7 @@
  */
 import { NextResponse } from 'next/server';
 import { db, asRows } from '@/db';
-import { attendances, members, reservations, lessonSlots } from '@/db/schema';
+import { attendances, members, lessonSlots } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';

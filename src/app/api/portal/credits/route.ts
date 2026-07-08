@@ -3,8 +3,8 @@
  */
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { substitutionCredits, lessonSlots, lessons } from '@/db/schema';
-import { eq, and, isNull, gte, desc } from 'drizzle-orm';
+import { substitutionCredits } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { requireMember } from '@/lib/api-auth';
 
 export async function GET(_req: Request) {

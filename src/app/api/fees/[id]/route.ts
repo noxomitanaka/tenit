@@ -5,7 +5,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { monthlyFees, members } from '@/db/schema';
-import { eq, sql as drizzleSql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { requireAdmin } from '@/lib/api-auth';
 import { isNonNegativeInt, isOneOf } from '@/lib/validation';
 

@@ -30,6 +30,7 @@ export default function ReportsPage() {
   useEffect(() => {
     fetch('/api/groups').then(r => r.json()).then(d => { if (Array.isArray(d)) setGroups(d); });
     fetchReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function fetchReport() {
@@ -41,10 +42,6 @@ export default function ReportsPage() {
     setData(json);
     setLoading(false);
   }
-
-  const attendanceRate = (data && data.summary.totalSlots > 0)
-    ? ((data.summary.totalAttendances / (data.summary.totalSlots * Math.max(data.rows.length, 1))) * 100).toFixed(1)
-    : null;
 
   return (
     <div className="p-8 max-w-4xl">

@@ -213,6 +213,7 @@ export default function MemberDetailPage() {
         <div className="mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">出席用QRコード</h3>
           <div className="flex items-start gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element -- QRは内部APIが動的生成するPNG。next/imageは最適化不要でloader設定が過剰 */}
             <img
               src={`/api/members/${id}/qr`}
               alt={`${member.name} QRコード`}

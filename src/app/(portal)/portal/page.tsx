@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { auth } from '@/auth';
 import { members, reservations, lessonSlots, substitutionCredits } from '@/db/schema';
-import { eq, and, isNull, gte, desc } from 'drizzle-orm';
+import { eq, and, isNull, gte } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 

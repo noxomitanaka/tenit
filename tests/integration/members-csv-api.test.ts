@@ -18,10 +18,6 @@ vi.mock('@/auth', () => ({
 const { GET: GET_EXPORT } = await import('@/app/api/members/export/route');
 const { POST: POST_IMPORT } = await import('@/app/api/members/import/route');
 
-function params(_id: string) {
-  return { params: Promise.resolve({ id: _id }) };
-}
-
 async function seedAdmin() {
   await testDb.insert(users).values({
     id: 'admin-1', email: 'admin@test.com', name: 'Admin', role: 'admin', hashedPassword: 'x',

@@ -3,7 +3,7 @@
  * テーブル定義が期待通りのカラムを持つか
  */
 import { describe, it, expect } from 'vitest';
-import { users, members, groups, courts, lessons, lessonSlots, reservations, substitutionCredits, clubSettings } from '@/db/schema';
+import { users, members, courts, reservations, substitutionCredits } from '@/db/schema';
 
 describe('DB Schema', () => {
   describe('users テーブル', () => {

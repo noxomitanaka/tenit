@@ -12,7 +12,6 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status') as 'active' | 'inactive' | null;
-  const groupId = searchParams.get('groupId');
   const limitParam = searchParams.get('limit');
   const offsetParam = searchParams.get('offset');
   const paginated = limitParam !== null || offsetParam !== null;

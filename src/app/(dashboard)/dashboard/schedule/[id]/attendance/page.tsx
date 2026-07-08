@@ -78,7 +78,6 @@ export default function AttendancePage() {
   }
 
   const attendedIds = new Set(attendances.map(a => a.memberId));
-  const reservedIds = new Set(reservations.filter(r => r.status === 'confirmed').map(r => r.memberId));
 
   return (
     <div className="p-8 max-w-2xl">
