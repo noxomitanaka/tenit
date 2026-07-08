@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { db } from '@/db';
 import { monthlyFees, clubSettings } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -37,15 +37,28 @@ export async function POST(req: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const feeId = session.metadata?.feeId;
     if (feeId && session.payment_status === 'paid') {
-      await db.update(monthlyFees)
-        .set({
-          status: 'paid',
-          paidAt: new Date(),
-          stripePaymentIntentId: typeof session.payment_intent === 'string'
-            ? session.payment_intent
-            : null,
-        })
-        .where(eq(monthlyFees.id, feeId));
+      // 決済金額を月謝額と照合してから paid 化する。
+      // 金額不一致（旧額セッション・改ざん）や二重処理を受理しない。
+      const [fee] = await db.select().from(monthlyFees).where(eq(monthlyFees.id, feeId));
+      if (!fee) {
+        console.error(`[stripe-webhook] fee not found: ${feeId}`);
+      } else if (fee.status === 'paid') {
+        // 既に paid。重複 webhook として無視する。
+      } else if (session.amount_total !== fee.amount || session.currency !== 'jpy') {
+        console.error(
+          `[stripe-webhook] amount mismatch for fee ${feeId}: paid ${session.amount_total} ${session.currency}, expected ${fee.amount} jpy`
+        );
+      } else {
+        await db.update(monthlyFees)
+          .set({
+            status: 'paid',
+            paidAt: new Date(),
+            stripePaymentIntentId: typeof session.payment_intent === 'string'
+              ? session.payment_intent
+              : null,
+          })
+          .where(and(eq(monthlyFees.id, feeId), ne(monthlyFees.status, 'paid')));
+      }
     }
   }
 

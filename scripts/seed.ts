@@ -7,18 +7,14 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 import { users, members, clubSettings, groups, courts, lessons } from '../src/db/schema';
-import * as crypto from 'crypto';
+// 認証コード（src/lib/password.ts）と同一の bcrypt ハッシュを使う。
+// 旧実装の scrypt `salt:hash` は verifyPassword（$2 か 64hex SHA-256 のみ対応）が
+// 解釈できず、シードした管理者が永久にログイン不能かつ /setup も封鎖されていた。
+import { hashPassword } from '../src/lib/password';
 
 const url = process.env.DATABASE_URL ?? 'file:./local.db';
 const client = createClient({ url, authToken: process.env.DATABASE_AUTH_TOKEN });
 const db = drizzle(client);
-
-// Simple bcrypt-style hash (using crypto for portability without bcrypt dep)
-async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
-}
 
 async function main() {
   console.log(`Seeding database: ${url}`);

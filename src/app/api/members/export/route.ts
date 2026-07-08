@@ -10,7 +10,12 @@ import { requireAdmin } from '@/lib/api-auth';
 
 function escapeCsv(value: string | null | undefined): string {
   if (value == null) return '';
-  const str = String(value);
+  let str = String(value);
+  // フォーミュラインジェクション対策: 先頭が = + - @ タブ CR の値は
+  // Excel/Sheets で数式として実行されうるため、シングルクォートで無害化する。
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
   // カンマ・ダブルクォート・改行を含む場合はダブルクォートで囲む
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;

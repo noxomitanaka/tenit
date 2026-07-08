@@ -43,7 +43,9 @@ describe('POST /api/auth/register', () => {
     expect(allMembers).toHaveLength(1);
     expect(allMembers[0].name).toBe('田中花子');
     expect(allMembers[0].phone).toBe('090-1234-5678');
-    expect(allMembers[0].status).toBe('active');
+    // セルフ登録は承認待ち（inactive）で作成される。即時 active は
+    // 未承認の外部者が会員データに到達する経路になるため禁止。
+    expect(allMembers[0].status).toBe('inactive');
   });
 
   it('パスワードがハッシュ化されて保存される', async () => {

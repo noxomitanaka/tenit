@@ -52,12 +52,16 @@ export async function POST(req: Request) {
       status: 'pending' as const,
     }));
 
+  // (memberId, month) 一意制約により、並行実行で existingSet をすり抜けた分も
+  // DB 層で二重生成を防ぐ。衝突分はスキップし、実際に挿入された行のみ数える。
+  let created = 0;
   if (toInsert.length > 0) {
-    await db.insert(monthlyFees).values(toInsert);
+    const inserted = await db.insert(monthlyFees).values(toInsert).onConflictDoNothing().returning({ id: monthlyFees.id });
+    created = inserted.length;
   }
 
   return NextResponse.json({
-    created: toInsert.length,
-    skipped: activeMembers.length - toInsert.length,
+    created,
+    skipped: activeMembers.length - created,
   }, { status: 201 });
 }

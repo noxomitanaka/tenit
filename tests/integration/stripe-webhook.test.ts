@@ -98,6 +98,8 @@ describe('POST /api/stripe/webhook', () => {
           metadata: { feeId: 'fee-1' },
           payment_status: 'paid',
           payment_intent: 'pi_test_123',
+          amount_total: 10000,
+          currency: 'jpy',
         },
       },
     });
@@ -111,6 +113,27 @@ describe('POST /api/stripe/webhook', () => {
     expect(fee.status).toBe('paid');
     expect(fee.paidAt).not.toBeNull();
     expect(fee.stripePaymentIntentId).toBe('pi_test_123');
+  });
+
+  it('決済金額が月謝額と一致しない場合は paid にしない（金額改ざん対策）', async () => {
+    await seedSettings();
+    await seedFee();
+    mockConstructEvent.mockReturnValue({
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          metadata: { feeId: 'fee-1' },
+          payment_status: 'paid',
+          payment_intent: 'pi_bad',
+          amount_total: 1, // 月謝は 10000 円。過少決済
+          currency: 'jpy',
+        },
+      },
+    });
+    const res = await POST(makeWebhookReq('{}', 'sig_ok'));
+    expect(res.status).toBe(200);
+    const [fee] = await testDb.select().from(monthlyFees).where(eq(monthlyFees.id, 'fee-1'));
+    expect(fee.status).toBe('pending');
   });
 
   it('checkout.session.completed で payment_status が paid でなければ更新しない', async () => {

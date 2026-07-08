@@ -317,4 +317,55 @@ describe('PUT /api/tournaments/[id]/matches', () => {
     );
     expect(res.status).toBe(404);
   });
+
+  it('player2 勝利時: 勝者に加点され、敗者の losses は1回だけ増える', async () => {
+    await seedMatch();
+    await PUT_MATCH(
+      makeReq('PUT', 'http://localhost/api/tournaments/t1/matches', {
+        matchId: 'match1', score1: '4', score2: '6', winnerId: 'm2',
+      }),
+      params('t1')
+    );
+    const all = await testDb.select().from(tournamentEntries);
+    const winner = all.find(e => e.memberId === 'm2')!;
+    const loser = all.find(e => e.memberId === 'm1')!;
+    // 勝者 m2 に wins/points が加算される（旧実装では加算されなかった）
+    expect(winner.wins).toBe(1);
+    expect(winner.points).toBe(3);
+    // 敗者 m1 の losses は1回だけ（旧実装では二重加算で2になっていた）
+    expect(loser.losses).toBe(1);
+    expect(loser.wins).toBe(0);
+  });
+
+  it('対戦者でない winnerId は400', async () => {
+    await seedMatch();
+    const res = await PUT_MATCH(
+      makeReq('PUT', 'http://localhost/api/tournaments/t1/matches', {
+        matchId: 'match1', winnerId: 'outsider',
+      }),
+      params('t1')
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('確定済みマッチへの再送信は409（集計の二重加算防止）', async () => {
+    await seedMatch();
+    await PUT_MATCH(
+      makeReq('PUT', 'http://localhost/api/tournaments/t1/matches', {
+        matchId: 'match1', winnerId: 'm1',
+      }),
+      params('t1')
+    );
+    const res = await PUT_MATCH(
+      makeReq('PUT', 'http://localhost/api/tournaments/t1/matches', {
+        matchId: 'match1', winnerId: 'm2',
+      }),
+      params('t1')
+    );
+    expect(res.status).toBe(409);
+    // 集計は最初の1回のみ反映されていること
+    const all = await testDb.select().from(tournamentEntries);
+    expect(all.find(e => e.memberId === 'm1')!.wins).toBe(1);
+    expect(all.find(e => e.memberId === 'm2')!.wins).toBe(0);
+  });
 });

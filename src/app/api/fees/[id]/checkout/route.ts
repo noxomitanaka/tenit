@@ -47,6 +47,17 @@ export async function POST(req: Request, { params }: Params) {
 
   const stripe = new Stripe(settings.stripeSecretKey);
 
+  // 既存の未完了 Checkout セッションを失効させる（二重請求経路の遮断）。
+  // 失効に失敗しても新規発行は続行するが、旧セッションが有効なままだと
+  // 旧URLと新URLの両方で決済され得るため必ず試みる。
+  if (fee.stripeCheckoutSessionId) {
+    try {
+      await stripe.checkout.sessions.expire(fee.stripeCheckoutSessionId);
+    } catch {
+      // 既に完了・失効済みなら expire は失敗する。無視して新規発行に進む。
+    }
+  }
+
   // 会員情報取得
   const [member] = await db
     .select({ name: members.name, email: members.email, stripeCustomerId: members.stripeCustomerId })
@@ -87,6 +98,9 @@ export async function POST(req: Request, { params }: Params) {
       },
     ],
     mode: 'payment',
+    // 30分でセッション失効（Stripe が許す最小値）。放置された古いセッションが
+    // 無期限に決済可能なまま残るのを防ぐ。
+    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
     success_url: `${baseUrl}/portal/fees?success=true`,
     cancel_url: `${baseUrl}/portal/fees?canceled=true`,
     metadata: { feeId: fee.id, memberId: fee.memberId, month: fee.month },

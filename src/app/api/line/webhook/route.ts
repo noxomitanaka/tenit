@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateLineSignature } from '@/lib/line';
 import { db } from '@/db';
 import { clubSettings, members, lineLinkPins } from '@/db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, gt, ne } from 'drizzle-orm';
+import { rateLimit } from '@/lib/rate-limit';
 import type { WebhookRequestBody, FollowEvent, MessageEvent, TextMessage } from '@line/bot-sdk';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -44,6 +45,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const match = text.match(/^リンク\s+(\d{6})$/);
         if (match) {
           const pin = match[1];
+          // ブルートフォース抑止: LINE ユーザー単位で 5分5回まで。
+          // メッセージには PIN しか含まれず会員を特定できないため、
+          // 送信元 lineUserId でレート制限するのが実効的。
+          if (!rateLimit(`line-link:${lineUserId}`, 5, 5 * 60 * 1000)) {
+            console.log(`[LINE webhook] レート制限超過: ${lineUserId}`);
+            continue;
+          }
           // 未使用かつ有効期限内のPINを検索
           const [linkPin] = await db.select().from(lineLinkPins).where(
             and(
@@ -52,6 +60,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             )
           );
           if (linkPin && !linkPin.usedAt) {
+            // 多重バインド防止: この lineUserId が既に別会員へ紐付いていれば拒否。
+            // 上書きを許すと他人の LINE を乗っ取り紐付けできてしまう。
+            const [bound] = await db.select({ id: members.id }).from(members).where(
+              and(eq(members.lineUserId, lineUserId), ne(members.id, linkPin.memberId))
+            );
+            if (bound) {
+              console.log(`[LINE webhook] 既に別会員に紐付け済み: ${lineUserId}`);
+              continue;
+            }
             await db.update(members).set({ lineUserId }).where(eq(members.id, linkPin.memberId));
             await db.update(lineLinkPins).set({ usedAt: new Date() }).where(eq(lineLinkPins.id, linkPin.id));
             console.log(`[LINE webhook] PIN認証リンク: ${linkPin.memberId} ← ${lineUserId}`);

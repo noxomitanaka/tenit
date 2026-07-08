@@ -32,25 +32,30 @@ export async function POST(req: Request) {
   const userId = generateId();
   const memberId = generateId();
 
-  // user と member を同時作成
-  await db.insert(users).values({
-    id: userId,
-    email: body.email.trim(),
-    name: body.name.trim(),
-    role: 'member',
-    hashedPassword,
+  // user と member を単一トランザクションで作成（片方だけ残る不整合を防ぐ）。
+  // status は inactive（承認待ち）。管理者承認まで会員機能は使えない
+  // （requireMember が active 以外を 403）。self-registration の即時アクティブ化は
+  // 未承認の外部者が会員データに到達する経路になるため禁止する。
+  await db.transaction(async (tx) => {
+    await tx.insert(users).values({
+      id: userId,
+      email: body.email.trim(),
+      name: body.name.trim(),
+      role: 'member',
+      hashedPassword,
+    });
+
+    await tx.insert(members).values({
+      id: memberId,
+      userId,
+      name: body.name.trim(),
+      nameKana: body.nameKana?.trim() ?? null,
+      email: body.email.trim(),
+      phone: body.phone?.trim() ?? null,
+      status: 'inactive',
+      joinedAt: new Date(),
+    });
   });
 
-  await db.insert(members).values({
-    id: memberId,
-    userId,
-    name: body.name.trim(),
-    nameKana: body.nameKana?.trim() ?? null,
-    email: body.email.trim(),
-    phone: body.phone?.trim() ?? null,
-    status: 'active',
-    joinedAt: new Date(),
-  });
-
-  return NextResponse.json({ ok: true, memberId }, { status: 201 });
+  return NextResponse.json({ ok: true, memberId, status: 'pending_approval' }, { status: 201 });
 }
