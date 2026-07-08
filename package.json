@@ -16,6 +16,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src scripts tests",
+    "db:seed:demo": "tsx scripts/seed-demo.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
