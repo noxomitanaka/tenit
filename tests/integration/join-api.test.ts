@@ -8,7 +8,7 @@ import { members } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { __resetRateLimit } from '@/lib/rate-limit';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 
 const { POST } = await import('@/app/api/join/route');
 

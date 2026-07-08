@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 // キャンセル期限チェックを通せずクレジット発行テストが壊れる）。
 const FUTURE_DATE = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: { id: 'user-1', email: 'member@test.com', name: '田中', role: 'member' as const },

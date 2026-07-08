@@ -9,7 +9,7 @@ import { testDb } from '../setup';
 import { clubSettings, members, monthlyFees, users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({ user: { id: 'user-1', name: '田中', role: 'member' as const } }),
 }));

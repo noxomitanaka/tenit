@@ -8,7 +8,7 @@ import { testDb } from '../setup';
 import { lessons, lessonSlots, members, reservations, clubSettings, substitutionCredits } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 vi.mock('@/auth', () => ({
   auth: vi.fn().mockResolvedValue({
     user: { id: 'admin-1', name: 'Admin', role: 'admin' as const },

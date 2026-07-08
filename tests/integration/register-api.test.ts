@@ -6,7 +6,7 @@ import { resetDb } from '../helpers/db';
 import { testDb } from '../setup';
 import { users, members } from '@/db/schema';
 
-vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
+vi.mock('@/db', () => ({ db: testDb, asRows: <T>(r: T[]) => r }));
 
 const { POST } = await import('@/app/api/auth/register/route');
 
