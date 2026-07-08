@@ -62,6 +62,22 @@ export async function POST(req: Request) {
       if (!s) throw Object.assign(new Error('lesson slot not found'), { status: 404 });
       if (s.status !== 'open') throw Object.assign(new Error('lesson slot is not available'), { status: 409 });
 
+      // 定員チェック: confirmed 予約数が lessons.maxParticipants に達していたら 409。
+      // BEGIN IMMEDIATE の write トランザクション内でカウントするため直列化される。
+      const [lessonCap] = await tx.select({ maxParticipants: lessons.maxParticipants })
+        .from(lessons).where(eq(lessons.id, s.lessonId));
+      if (lessonCap?.maxParticipants != null) {
+        const [{ confirmed }] = await tx.select({ confirmed: sql<number>`count(*)` }).from(reservations).where(
+          and(
+            eq(reservations.lessonSlotId, body.lessonSlotId),
+            eq(reservations.status, 'confirmed')
+          )
+        );
+        if (Number(confirmed) >= lessonCap.maxParticipants) {
+          throw Object.assign(new Error('lesson slot is full'), { status: 409 });
+        }
+      }
+
       const [dup] = await tx.select().from(reservations).where(
         and(
           eq(reservations.lessonSlotId, body.lessonSlotId),

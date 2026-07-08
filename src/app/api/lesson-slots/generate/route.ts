@@ -15,7 +15,13 @@ function dateRange(from: string, to: string): string[] {
   const cur = new Date(from + 'T00:00:00');
   const end = new Date(to + 'T00:00:00');
   while (cur <= end) {
-    dates.push(cur.toISOString().slice(0, 10));
+    // ローカル時刻でパースした日付をローカル成分のまま整形する。
+    // toISOString は UTC 変換のため、JST 等 非UTC ランタイムでは全日付が
+    // 1日前倒しになる（cur はローカル解釈・出力は UTC で混在していた）。
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, '0');
+    const d = String(cur.getDate()).padStart(2, '0');
+    dates.push(`${y}-${m}-${d}`);
     cur.setDate(cur.getDate() + 1);
   }
   return dates;
@@ -99,10 +105,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ created: 0, message: 'All slots already exist' });
   }
 
-  // 100件ずつバッチ挿入
+  // 100件ずつバッチ挿入。(lessonId, date, startTime) 一意制約への衝突分は
+  // スキップし、並行実行での複製を防ぐ。
   const BATCH = 100;
   for (let i = 0; i < toInsert.length; i += BATCH) {
-    await db.insert(lessonSlots).values(toInsert.slice(i, i + BATCH));
+    await db.insert(lessonSlots).values(toInsert.slice(i, i + BATCH)).onConflictDoNothing();
   }
 
   return NextResponse.json({ created: toInsert.length }, { status: 201 });

@@ -5,6 +5,7 @@ import {
   sqliteTable,
   primaryKey,
   index,
+  uniqueIndex,
   type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core';
 
@@ -173,7 +174,9 @@ export const lessonSlots = sqliteTable(
       .default(sql`(strftime('%s', 'now') * 1000)`),
   },
   (t) => ({
-    lessonDateIdx: index('lesson_slot_lesson_date_idx').on(t.lessonId, t.date),
+    // (lessonId, date, startTime) を一意にし、バッチ再生成でのスロット全複製を DB 層で防ぐ。
+    // lessonId+date 前方一致クエリのインデックスも兼ねる。
+    lessonDateIdx: uniqueIndex('lesson_slot_lesson_date_time_idx').on(t.lessonId, t.date, t.startTime),
   })
 );
 
@@ -290,7 +293,8 @@ export const monthlyFees = sqliteTable(
       .default(sql`(strftime('%s', 'now') * 1000)`),
   },
   (t) => ({
-    memberMonthIdx: index('monthly_fee_member_month_idx').on(t.memberId, t.month),
+    // (memberId, month) を一意にし、並行実行での月謝二重生成を DB 層で防ぐ。
+    memberMonthIdx: uniqueIndex('monthly_fee_member_month_idx').on(t.memberId, t.month),
   })
 );
 

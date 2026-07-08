@@ -81,6 +81,14 @@ export async function requireMember(): Promise<MemberAuthResult> {
       response: NextResponse.json({ error: 'No member profile linked to this account' }, { status: 403 }),
     };
   }
+  // 未承認（inactive）会員は管理者承認まで会員機能を使えない。
+  // セルフ登録・自己申込は inactive で作成されるため、承認ゲートをここで強制する。
+  if (member.status !== 'active') {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: 'Member account is pending approval' }, { status: 403 }),
+    };
+  }
 
   return { ok: true, session: result.session, member };
 }

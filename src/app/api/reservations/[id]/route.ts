@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db, asRows } from '@/db';
-import { reservations, substitutionCredits, clubSettings, lessonSlots } from '@/db/schema';
+import { reservations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
+import { issueCancellationCredit } from '@/lib/reservations';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -33,44 +33,24 @@ export async function PATCH(req: Request, { params }: Params) {
     return NextResponse.json({ error: 'invalid status' }, { status: 400 });
   }
 
-  const [updated] = asRows(await db.update(reservations).set({
-    status: body.status,
-    notes: body.notes ?? existing.notes,
-  }).where(eq(reservations.id, id)).returning());
-
-  // 通常予約のキャンセル/欠席時に振替クレジットを発行
-  // キャンセル期限を過ぎている場合はクレジット不発行
-  let credit = null;
-  if (
+  // ステータス更新とクレジット発行を単一トランザクションに包み、
+  // confirmed→cancelled→confirmed の往復による TOCTOU とクレジット無限増殖を防ぐ。
+  // クレジット発行は通常予約の confirmed からのキャンセル/欠席時のみ。
+  // 期限チェック・冪等ガードは issueCancellationCredit に集約。
+  const shouldIssueCredit =
     (body.status === 'cancelled' || body.status === 'absent') &&
     existing.status === 'confirmed' &&
-    !existing.isSubstitution
-  ) {
-    const [settings] = await db.select().from(clubSettings).limit(1);
-    const deadlineDays = settings?.substitutionDeadlineDays ?? 31;
-    const cancellationDeadlineHours = settings?.cancellationDeadlineHours ?? 24;
+    !existing.isSubstitution;
 
-    // スロットの開始日時を取得してキャンセル期限チェック
-    const [slot] = await db.select({ date: lessonSlots.date, startTime: lessonSlots.startTime })
-      .from(lessonSlots).where(eq(lessonSlots.id, existing.lessonSlotId));
+  const result = await db.transaction(async (tx) => {
+    const [row] = asRows(await tx.update(reservations).set({
+      status: body.status,
+      notes: body.notes ?? existing.notes,
+    }).where(eq(reservations.id, id)).returning());
 
-    let withinDeadline = true;
-    if (slot) {
-      const lessonStart = new Date(`${slot.date}T${slot.startTime}:00`);
-      const hoursUntilLesson = (lessonStart.getTime() - Date.now()) / (1000 * 60 * 60);
-      withinDeadline = hoursUntilLesson >= cancellationDeadlineHours;
-    }
+    const issued = shouldIssueCredit ? await issueCancellationCredit(tx, existing) : null;
+    return { updated: row, credit: issued };
+  });
 
-    if (withinDeadline) {
-      const expiresAt = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000);
-      [credit] = asRows(await db.insert(substitutionCredits).values({
-        id: generateId(),
-        memberId: existing.memberId,
-        sourceReservationId: existing.id,
-        expiresAt,
-      }).returning());
-    }
-  }
-
-  return NextResponse.json({ reservation: updated, credit });
+  return NextResponse.json({ reservation: result.updated, credit: result.credit });
 }

@@ -141,9 +141,10 @@ describe('POST /api/notifications/overdue', () => {
   it('既に paid や waived のものは変更されない', async () => {
     await seedAdmin();
     await testDb.insert(members).values({ id: 'm1', name: '田中', status: 'active' });
+    // (member, month) は一意のため月を分ける（会員×月の月謝は1件）
     await testDb.insert(monthlyFees).values([
       { id: 'f1', memberId: 'm1', month: '2025-12', amount: 10000, status: 'paid' },
-      { id: 'f2', memberId: 'm1', month: '2025-12', amount: 10000, status: 'waived' },
+      { id: 'f2', memberId: 'm1', month: '2026-01', amount: 10000, status: 'waived' },
     ]);
 
     const res = await POST_OVERDUE(makeReq('POST', 'http://localhost/api/notifications/overdue', {

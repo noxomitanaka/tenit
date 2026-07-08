@@ -83,14 +83,17 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json(inserted, { status: 201 });
   }
 
+  // 次ラウンド番号は swiss/elimination いずれも「現在の最大round+1」。
+  // 旧実装は elimination で +0 としており、次ラウンドが前ラウンドと同じ
+  // round 番号で生成され、前ラウンド完了判定・勝者抽出が破綻していた。
   const nextRound = existingMatches.length === 0
     ? 1
-    : Math.max(...existingMatches.map(m => m.round)) + (tournament.type === 'swiss' ? 1 : 0);
+    : Math.max(...existingMatches.map(m => m.round)) + 1;
 
   const values = pairs.map(p => ({
     id: generateId(),
     tournamentId,
-    round: tournament.type === 'swiss' ? nextRound : existingMatches.length === 0 ? 1 : nextRound,
+    round: nextRound,
     player1Id: p.player1Id,
     player2Id: p.player2Id,
   }));
@@ -116,35 +119,42 @@ export async function PUT(req: Request, { params }: Params) {
     .where(and(eq(tournamentMatches.id, body.matchId), eq(tournamentMatches.tournamentId, tournamentId)));
   if (!match) return NextResponse.json({ error: 'Match not found' }, { status: 404 });
 
+  // winnerId は対戦者のいずれかでなければならない（無関係IDでの集計汚染を防ぐ）
+  if (body.winnerId !== match.player1Id && body.winnerId !== match.player2Id) {
+    return NextResponse.json({ error: 'winnerId must be one of the match players' }, { status: 400 });
+  }
+  // 確定済みマッチの再送信は集計の二重加算を招くため拒否する（冪等性の担保）
+  if (match.winnerId) {
+    return NextResponse.json({ error: 'Match result already recorded' }, { status: 409 });
+  }
+
+  const winnerId = body.winnerId;
+  const loserId = winnerId === match.player1Id ? match.player2Id : match.player1Id;
+
   const updated = await db.transaction(async (tx) => {
     const [matchResult] = asRows(await tx.update(tournamentMatches).set({
       score1: body.score1 ?? match.score1,
       score2: body.score2 ?? match.score2,
-      winnerId: body.winnerId,
+      winnerId,
       completedAt: new Date(),
     }).where(eq(tournamentMatches.id, body.matchId)).returning());
 
-    // エントリーの集計更新
-    const loserId = body.winnerId === match.player1Id ? match.player2Id : match.player1Id;
-    if (match.player1Id) {
-      const isWinner = match.player1Id === body.winnerId;
-      const [e] = await tx.select().from(tournamentEntries)
-        .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, match.player1Id)));
-      if (e) {
-        await tx.update(tournamentEntries).set({
-          wins: isWinner ? e.wins + 1 : e.wins,
-          losses: isWinner ? e.losses : e.losses + 1,
-          points: isWinner ? e.points + 3 : e.points,
-        }).where(eq(tournamentEntries.id, e.id));
-      }
+    // エントリー集計を勝者・敗者で対称に更新（各1回のみ）
+    const [winnerEntry] = await tx.select().from(tournamentEntries)
+      .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, winnerId)));
+    if (winnerEntry) {
+      await tx.update(tournamentEntries).set({
+        wins: winnerEntry.wins + 1,
+        points: winnerEntry.points + 3,
+      }).where(eq(tournamentEntries.id, winnerEntry.id));
     }
     if (loserId) {
-      const [e] = await tx.select().from(tournamentEntries)
+      const [loserEntry] = await tx.select().from(tournamentEntries)
         .where(and(eq(tournamentEntries.tournamentId, tournamentId), eq(tournamentEntries.memberId, loserId)));
-      if (e) {
+      if (loserEntry) {
         await tx.update(tournamentEntries).set({
-          losses: e.losses + 1,
-        }).where(eq(tournamentEntries.id, e.id));
+          losses: loserEntry.losses + 1,
+        }).where(eq(tournamentEntries.id, loserEntry.id));
       }
     }
 

@@ -5,6 +5,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { resetDb } from '../helpers/db';
 import { testDb } from '../setup';
 import { members } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { __resetRateLimit } from '@/lib/rate-limit';
 
 vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 
@@ -18,7 +20,7 @@ function makeReq(body: object) {
   });
 }
 
-beforeEach(async () => { await resetDb(); });
+beforeEach(async () => { await resetDb(); __resetRateLimit(); });
 
 describe('POST /api/join', () => {
   it('入会申請でstatus=inactiveの会員が作成される', async () => {
@@ -43,9 +45,22 @@ describe('POST /api/join', () => {
     expect(res.status).toBe(400);
   });
 
-  it('重複メールアドレスは409エラー', async () => {
+  it('重複メールでも成功応答を返す（メール列挙対策・重複作成なし）', async () => {
     await POST(makeReq({ name: '田中', email: 'dup@test.com' }));
     const res = await POST(makeReq({ name: '田中2', email: 'dup@test.com' }));
-    expect(res.status).toBe(409);
+    // 存在を明かさないため 201。DB には重複作成されない。
+    expect(res.status).toBe(201);
+    const rows = await testDb.select().from(members).where(eq(members.email, 'dup@test.com'));
+    expect(rows).toHaveLength(1);
+  });
+
+  it('不正なメール形式は400', async () => {
+    const res = await POST(makeReq({ name: '田中', email: 'not-an-email' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('不正なlevelは400', async () => {
+    const res = await POST(makeReq({ name: '田中', email: 'ok@test.com', level: 'master' }));
+    expect(res.status).toBe(400);
   });
 });

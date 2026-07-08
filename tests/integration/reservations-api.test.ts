@@ -36,8 +36,11 @@ async function seedFixtures() {
     id: 'l1', title: 'テスト', startTime: '10:00', endTime: '11:00',
     type: 'lesson', isRecurring: false,
   });
+  // キャンセル期限チェックを通すため、スロットは十分先の未来日にする
+  // （固定日にすると時間経過で過去になりクレジット発行テストが壊れる）。
+  const futureDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   await testDb.insert(lessonSlots).values({
-    id: 's1', lessonId: 'l1', date: '2026-04-07', startTime: '10:00', endTime: '11:00', status: 'open',
+    id: 's1', lessonId: 'l1', date: futureDate, startTime: '10:00', endTime: '11:00', status: 'open',
   });
 }
 

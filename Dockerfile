@@ -27,6 +27,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# マイグレーション（SQL）と適用スクリプトを同梱し、起動時に適用する。
+# standalone だけでは migrations が入らず fresh volume 起動が破綻するため。
+COPY --from=builder --chown=nextjs:nodejs /app/migrations ./migrations
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/docker-migrate.mjs ./scripts/docker-migrate.mjs
+
 # SQLiteデータ永続化用ディレクトリ
 RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
 
@@ -37,4 +42,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# 起動前にマイグレーションを適用してから server を起動する
+CMD ["sh", "-c", "node scripts/docker-migrate.mjs && node server.js"]

@@ -4,7 +4,7 @@
 import { NextResponse } from 'next/server';
 import { db, asRows } from '@/db';
 import { reservations, lessonSlots, lessons, substitutionCredits } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireMember } from '@/lib/api-auth';
 import { notifyReservationConfirmed } from '@/lib/notifications';
@@ -41,6 +41,11 @@ export async function POST(req: Request) {
   if (!body.lessonSlotId) {
     return NextResponse.json({ error: 'lessonSlotId is required' }, { status: 400 });
   }
+  // 振替予約は creditId 必須。creditId を省くと残高チェックを迂回して
+  // 無償の振替予約が作れてしまうため、サーバー側で強制する。
+  if (body.isSubstitution && !body.creditId) {
+    return NextResponse.json({ error: 'creditId is required for substitution reservations' }, { status: 400 });
+  }
 
   // スロット確認・重複チェック・INSERT を 1 トランザクションに包んで race condition を防止
   let slot: typeof lessonSlots.$inferSelect;
@@ -51,6 +56,22 @@ export async function POST(req: Request) {
       const [s] = await tx.select().from(lessonSlots).where(eq(lessonSlots.id, body.lessonSlotId));
       if (!s) throw Object.assign(new Error('Slot not found'), { status: 404 });
       if (s.status !== 'open') throw Object.assign(new Error('Slot not available'), { status: 409 });
+
+      // 定員チェック: confirmed 予約数が lessons.maxParticipants に達していたら 409。
+      // BEGIN IMMEDIATE の write トランザクション内でカウントするため直列化される。
+      const [lesson] = await tx.select({ maxParticipants: lessons.maxParticipants })
+        .from(lessons).where(eq(lessons.id, s.lessonId));
+      if (lesson?.maxParticipants != null) {
+        const [{ confirmed }] = await tx.select({ confirmed: count() }).from(reservations).where(
+          and(
+            eq(reservations.lessonSlotId, body.lessonSlotId),
+            eq(reservations.status, 'confirmed')
+          )
+        );
+        if (confirmed >= lesson.maxParticipants) {
+          throw Object.assign(new Error('Slot is full'), { status: 409 });
+        }
+      }
 
       const [dup] = await tx.select().from(reservations).where(
         and(

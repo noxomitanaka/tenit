@@ -1,0 +1,34 @@
+# ビルドコンテキストからホスト固有・秘密・肥大ファイルを除外する。
+# COPY . . でホストの node_modules/.env.local/local.db 等が
+# builder 中間レイヤーへ混入するのを防ぐ。
+node_modules
+npm-debug.log*
+.next
+out
+build
+
+# 秘密・環境設定
+.env
+.env.*
+!.env.example
+
+# ローカル DB・バックアップ
+*.db
+*.db-*
+*.db.bak*
+local.db*
+data
+
+# VCS・IDE・テスト成果物
+.git
+.gitignore
+.github
+coverage
+playwright-report
+test-results
+.vscode
+.idea
+
+# ドキュメント・スクショ
+docs
+*.md

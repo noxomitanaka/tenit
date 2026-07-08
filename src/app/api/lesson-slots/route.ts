@@ -46,7 +46,10 @@ export async function POST(req: Request) {
     const toInsert = generateRecurringSlots(lesson as Parameters<typeof generateRecurringSlots>[0], body.from, body.to);
     if (toInsert.length === 0) return NextResponse.json([], { status: 201 });
 
-    const inserted = asRows(await db.insert(lessonSlots).values(toInsert).returning());
+    // 同一期間の再実行でスロットが全複製されるのを防ぐ。
+    // (lessonId, date, startTime) の一意制約に対し衝突分はスキップし、
+    // 実際に挿入された行のみ返す（returning は挿入行だけを返す）。
+    const inserted = asRows(await db.insert(lessonSlots).values(toInsert).onConflictDoNothing().returning());
     return NextResponse.json(inserted, { status: 201 });
   }
 

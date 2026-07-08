@@ -6,6 +6,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { resetDb } from '../helpers/db';
 import { testDb } from '../setup';
 import { members, lessons, lessonSlots, reservations, substitutionCredits, users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+
+// スロットは十分先の未来日にする（固定日だと時間経過で過去になり、
+// キャンセル期限チェックを通せずクレジット発行テストが壊れる）。
+const FUTURE_DATE = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 vi.mock('@/db', () => ({ db: testDb, asRows: (r: unknown) => r as any[] }));
 vi.mock('@/auth', () => ({
@@ -47,7 +52,7 @@ async function seedFixtures() {
     type: 'lesson', isRecurring: false,
   });
   await testDb.insert(lessonSlots).values({
-    id: 's1', lessonId: 'l1', date: '2026-04-10', startTime: '10:00', endTime: '11:00', status: 'open',
+    id: 's1', lessonId: 'l1', date: FUTURE_DATE, startTime: '10:00', endTime: '11:00', status: 'open',
   });
 }
 
@@ -66,7 +71,7 @@ describe('GET /api/portal/reservations', () => {
     const json = await res.json();
     expect(json).toHaveLength(1);
     expect(json[0].lessonTitle).toBe('テストレッスン');
-    expect(json[0].date).toBe('2026-04-10');
+    expect(json[0].date).toBe(FUTURE_DATE);
   });
 
   it('予約がない場合は空配列', async () => {
@@ -92,7 +97,7 @@ describe('POST /api/portal/reservations', () => {
     expect(json.memberId).toBe('m1');
   });
 
-  it('振替クレジットを使用した予約ができる', async () => {
+  it('振替クレジットを使用した予約ができ、クレジットが消費される', async () => {
     await seedFixtures();
     await testDb.insert(substitutionCredits).values({
       id: 'cr1', memberId: 'm1', expiresAt: new Date(Date.now() + 86400000),
@@ -103,6 +108,52 @@ describe('POST /api/portal/reservations', () => {
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.isSubstitution).toBe(true);
+    // クレジットが実際に消費されたことを DB で確認（消費 UPDATE の削除を検知する）
+    const [credit] = await testDb.select().from(substitutionCredits).where(eq(substitutionCredits.id, 'cr1'));
+    expect(credit.usedAt).not.toBeNull();
+    expect(credit.usedReservationId).toBe(json.id);
+  });
+
+  it('creditId 省略の振替予約は400（残高チェック迂回の防止）', async () => {
+    await seedFixtures();
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1', isSubstitution: true,
+    }));
+    expect(res.status).toBe(400);
+  });
+
+  it('使用済みクレジットは409', async () => {
+    await seedFixtures();
+    await testDb.insert(substitutionCredits).values({
+      id: 'cr1', memberId: 'm1', expiresAt: new Date(Date.now() + 86400000), usedAt: new Date(),
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1', isSubstitution: true, creditId: 'cr1',
+    }));
+    expect(res.status).toBe(409);
+  });
+
+  it('期限切れクレジットは409', async () => {
+    await seedFixtures();
+    await testDb.insert(substitutionCredits).values({
+      id: 'cr1', memberId: 'm1', expiresAt: new Date(Date.now() - 86400000),
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1', isSubstitution: true, creditId: 'cr1',
+    }));
+    expect(res.status).toBe(409);
+  });
+
+  it('他会員のクレジットは404', async () => {
+    await seedFixtures();
+    await testDb.insert(members).values({ id: 'm2', name: '他人', status: 'active' });
+    await testDb.insert(substitutionCredits).values({
+      id: 'cr1', memberId: 'm2', expiresAt: new Date(Date.now() + 86400000),
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1', isSubstitution: true, creditId: 'cr1',
+    }));
+    expect(res.status).toBe(404);
   });
 
   it('lessonSlotId未指定は400', async () => {
@@ -126,6 +177,32 @@ describe('POST /api/portal/reservations', () => {
       lessonSlotId: 's1',
     }));
     expect(res.status).toBe(409);
+  });
+
+  it('定員に達したスロットへの予約は409（オーバーブッキング防止）', async () => {
+    await seedFixtures();
+    await testDb.update(lessons).set({ maxParticipants: 1 }).where(eq(lessons.id, 'l1'));
+    // 別会員が既に1枠を確定予約済み → 定員1に到達
+    await testDb.insert(members).values({ id: 'm2', name: '他人', status: 'active' });
+    await testDb.insert(reservations).values({
+      id: 'r0', lessonSlotId: 's1', memberId: 'm2', status: 'confirmed', isSubstitution: false,
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1',
+    }));
+    expect(res.status).toBe(409);
+  });
+
+  it('定員未設定（無制限）なら複数会員が予約できる', async () => {
+    await seedFixtures();
+    await testDb.insert(members).values({ id: 'm2', name: '他人', status: 'active' });
+    await testDb.insert(reservations).values({
+      id: 'r0', lessonSlotId: 's1', memberId: 'm2', status: 'confirmed', isSubstitution: false,
+    });
+    const res = await POST(makeReq('POST', 'http://localhost/api/portal/reservations', {
+      lessonSlotId: 's1',
+    }));
+    expect(res.status).toBe(201);
   });
 
   it('同じスロットへの重複予約は409', async () => {
