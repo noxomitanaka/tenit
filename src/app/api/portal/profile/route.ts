@@ -7,6 +7,7 @@ import { db } from '@/db';
 import { members } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { requireMember } from '@/lib/api-auth';
+import { isValidEmail } from '@/lib/validation';
 
 export async function GET(_req: Request) {
   const auth = await requireMember();
@@ -24,6 +25,10 @@ export async function PATCH(req: Request) {
 
   if (body.name !== undefined && !body.name?.trim()) {
     return NextResponse.json({ error: 'name cannot be empty' }, { status: 400 });
+  }
+  // メールは sendEmail の to へ伝播するため、形式＋改行/制御文字を検証する
+  if (body.email != null && body.email !== '' && !isValidEmail(body.email.trim?.())) {
+    return NextResponse.json({ error: 'invalid email format' }, { status: 400 });
   }
 
   const updateData: Partial<typeof members.$inferInsert> = {};

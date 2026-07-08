@@ -89,6 +89,14 @@ describe('POST /api/fees/[id]/checkout', () => {
     expect(mockSessionCreate).not.toHaveBeenCalled();
   });
 
+  it('免除（waived）の月謝は決済不可で409', async () => {
+    await seed();
+    await testDb.update(monthlyFees).set({ status: 'waived' }).where(eq(monthlyFees.id, 'fee-1'));
+    const res = await POST(makeReq(), params('fee-1'));
+    expect(res.status).toBe(409);
+    expect(mockSessionCreate).not.toHaveBeenCalled();
+  });
+
   it('既存の未完了セッションがあれば失効させてから新規発行する（二重請求防止）', async () => {
     await seed();
     await testDb.update(monthlyFees)

@@ -4,6 +4,7 @@ import { reservations, lessonSlots, lessons, members, substitutionCredits } from
 import { eq, and, sql } from 'drizzle-orm';
 import { generateId } from '@/lib/id';
 import { requireAdmin } from '@/lib/api-auth';
+import { clubDateTime } from '@/lib/date';
 import { notifyReservationConfirmed } from '@/lib/notifications';
 
 export async function GET(req: Request) {
@@ -61,6 +62,11 @@ export async function POST(req: Request) {
       const [s] = await tx.select().from(lessonSlots).where(eq(lessonSlots.id, body.lessonSlotId));
       if (!s) throw Object.assign(new Error('lesson slot not found'), { status: 404 });
       if (s.status !== 'open') throw Object.assign(new Error('lesson slot is not available'), { status: 409 });
+
+      // 開始済み・過去枠の予約を拒否
+      if (clubDateTime(s.date, s.startTime).getTime() < Date.now()) {
+        throw Object.assign(new Error('lesson slot has already started'), { status: 409 });
+      }
 
       // 定員チェック: confirmed 予約数が lessons.maxParticipants に達していたら 409。
       // BEGIN IMMEDIATE の write トランザクション内でカウントするため直列化される。

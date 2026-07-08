@@ -42,6 +42,19 @@ describe('POST /api/line/webhook', () => {
     expect(res.status).toBe(503);
   });
 
+  test('不正な署名は401を返す', async () => {
+    const { validateLineSignature } = await import('@/lib/line');
+    vi.mocked(validateLineSignature).mockReturnValueOnce(false);
+    const { POST } = await import('@/app/api/line/webhook/route');
+    const req = new Request('http://localhost/api/line/webhook', {
+      method: 'POST',
+      headers: { 'x-line-signature': 'bad-sig' },
+      body: JSON.stringify({ events: [] }),
+    });
+    const res = await POST(req as Parameters<typeof POST>[0]);
+    expect(res.status).toBe(401);
+  });
+
   test('正常なwebhookでok:trueを返す', async () => {
     const { POST } = await import('@/app/api/line/webhook/route');
     const body = JSON.stringify({ events: [] });

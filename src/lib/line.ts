@@ -4,17 +4,6 @@
  */
 import * as line from '@line/bot-sdk';
 
-interface LineConfig {
-  channelAccessToken: string;
-  channelSecret: string;
-}
-
-export function createLineClient(config: LineConfig): line.messagingApi.MessagingApiClient {
-  return new line.messagingApi.MessagingApiClient({
-    channelAccessToken: config.channelAccessToken,
-  });
-}
-
 /** LINE の署名を検証する（webhook 受信時） */
 export function validateLineSignature(
   body: string,

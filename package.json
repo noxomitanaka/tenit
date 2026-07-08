@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/noxomitanaka/tenit"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

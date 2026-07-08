@@ -50,7 +50,7 @@ describe('PUT /api/settings', () => {
     expect(json.substitutionDeadlineDays).toBe(45);
   });
 
-  test('LINE Access Token を更新できる', async () => {
+  test('LINE Access Token を更新でき、レスポンスには秘密情報を返さない', async () => {
     const { PUT } = await import('@/app/api/settings/route');
     const res = await PUT(new Request('http://localhost/api/settings', {
       method: 'PUT',
@@ -59,7 +59,12 @@ describe('PUT /api/settings', () => {
     }));
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.lineChannelAccessToken).toBe('dummy-token-123');
+    // アクセストークンは書き込み専用の bearer secret のためレスポンスに含めない
+    expect('lineChannelAccessToken' in json).toBe(false);
     expect('lineChannelSecret' in json).toBe(false);
+    expect('stripeSecretKey' in json).toBe(false);
+    // DB には保存されていること
+    const [saved] = await testDb.select().from(clubSettings);
+    expect(saved.lineChannelAccessToken).toBe('dummy-token-123');
   });
 });
